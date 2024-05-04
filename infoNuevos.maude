@@ -7,12 +7,8 @@ fmod ITEM is
     pr STRING . 
     pr FLOAT .
     sort Item .
-    var S : String .
-    var F : Float .
 
     op [_,_] : String Float -> Item [ctor] .
-    op second : Item -> Float .
-    eq second([S, F]) = F .
 endfm
 
 view Item from TRIV to ITEM is
@@ -29,17 +25,17 @@ mod DEFINITION1 is
     subsort Nat < Agent .
     subsort Memory < Info .
 
-    var IT IT'         : Item .
-    var W F o1 o2 ho o : Float .
-    vars oi oj R       : Float .
-    var M              : Memory .
-    var ST             : String .
-    var X S Min1 Max1  : Nat .
-    var STEPS COMM     : Nat .
-    var g1 g2          : Int .
-    var AG AG' AG''    : Agent .
-    var SN             : SetOpinion .
-    var SE EDGES SE'   : SetEdge .
+    vars IT IT'       : Item .
+    vars W F o1 o2 ho : Float .
+    vars o oi oj R    : Float .
+    var M             : Memory .
+    var ST            : String .
+    vars S Min1 Max1  : Nat .
+    vars STEPS COMM X : Nat .
+    vars g1 g2        : Int .
+    vars AG AG' AG''  : Agent .
+    var SN            : SetOpinion .
+    vars SE SE'       : SetEdge .
 
     op paramHo : -> Float .
     eq paramHo = 3.0 .
@@ -50,17 +46,17 @@ mod DEFINITION1 is
     op paramS : -> Nat .
     eq paramS = 2 .
 
-    eq opinion(AG, < nodes: (< AG : [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = F .
+    eq opinion(AG, < nodes: (< AG : [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: SE') = F .
     eq opinion([ST, F] M) = F .
 
     op group : Agent State -> Int .
     op group : Memory -> Int .
-    eq group(AG, < nodes: (< AG : IT [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = rat(F) .
+    eq group(AG, < nodes: (< AG : IT [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: SE') = rat(F) .
     eq group(IT [ST, W] M) = rat(W) .
 
     op arguments : Agent State -> Memory .
     op arguments : Memory -> Memory .
-    eq arguments(AG, < nodes: (< AG : IT IT' M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = M .
+    eq arguments(AG, < nodes: (< AG : IT IT' M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: SE') = M .
     eq arguments(IT IT' M) = M .
 
     op rand : Nat -> Nat .
@@ -82,7 +78,7 @@ mod DEFINITION1 is
     eq randomPick(M, X) = selectElement(M, genRandom(0,size(M) - 1, X)) .
 
     op computeSimilarity : Int Float Int Float Float -> Float .
-    eq computeSimilarity(g1,o1,g2,o2,ho) = 
+    eq computeSimilarity(g1, o1, g2, o2, ho) = 
         (1.0 - ((float(abs(g1 - g2)) + (ho * abs(o1 - o2)))) / (2.0 + (2.0 * ho))) .
 
     op influence2 : Agent SetEdge -> SetEdge .
@@ -105,23 +101,22 @@ mod DEFINITION1 is
     op computeOpAdj : Bool Bool Nat -> Float .	
     eq computeOpAdj(X, oj, oi, S) = computeOpAdj(oj, oi, S, randFloat(X)) .
     eq computeOpAdj(oj, oi, S, R) = computeOpAdj((R < computeProb(oj)), (R < computeProb(oi)), S) .
-    eq computeOpAdj(true,false,S) = 2.0 / float(S) . --- j picks pro, i drops con
-    eq computeOpAdj(false,true,S) = -2.0 / float(S) . --- j picks con, i drops pro
-    eq computeOpAdj(true,true,S) = 0.0 . --- j picks pro, i drops pro
-    eq computeOpAdj(false,false,S) = 0.0 . --- j picks con, i picks con
+    eq computeOpAdj(true, false, S) = 2.0 / float(S) . --- j picks pro, i drops con
+    eq computeOpAdj(false, true, S) = -2.0 / float(S) . --- j picks con, i drops pro
+    eq computeOpAdj(true, true, S) = 0.0 . --- j picks pro, i drops pro
+    eq computeOpAdj(false, false, S) = 0.0 . --- j picks con, i picks con
 endm
 
 mod MODEL-I-E is
     pr DEFINITION1 .
 
-    var STATE                : State .
-    var SETEDGE SE EDGES SE' : SetEdge .
-    var AG AG' AG''          : Agent .
-    var STEPS COMM X S       : Nat .
-    var E                    : Edge .
-    var SA                   : SetAgent .
-    var W ho hp              : Float .
-    var NETWORK              : Network .
+    var STATE        : State .
+    vars SE SE'      : SetEdge .
+    vars AG AG' AG'' : Agent .
+    vars X S         : Nat .
+    var E            : Edge .
+    var SA           : SetAgent .
+    vars W ho hp     : Float .
 
     op selectElement : SetEdge Nat -> Edge .
     eq selectElement((E, SE), 0) = E .
@@ -146,21 +141,19 @@ mod MODEL-I-E is
         interaction-e(STATE, AG, SE, S, ho, hp) .
 
     op update-i-e : State SetEdge Agent -> Memory .
-    eq update-i-e(NETWORK  in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
-        ["o", interaction-e(NETWORK  in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS, paramHo, paramHs)] ["g", float(group(AG, NETWORK  in step: STEPS comm: COMM strat: EDGES))] .
+    eq update-i-e(STATE, SE, AG) =
+        ["o", interaction-e(STATE, AG, SE, paramS, paramHo, paramHs)] ["g", float(group(AG, STATE))] .
 endm
 
 mod MODEL-I-S is
     pr DEFINITION1 .
 
-    var STATE                : State .
-    var SETEDGE SE EDGES SE' : SetEdge .
-    var AG AG' AG''          : Agent .
-    var STEPS COMM X S       : Nat .
-    var E                    : Edge .
-    var SA                   : SetAgent .
-    var W ho hs f F          : Float .
-    var NETWORK              : Network .
+    var STATE        : State .
+    vars SE SE'      : SetEdge .
+    vars AG AG' AG'' : Agent .
+    vars S X          : Nat .
+    var SA           : SetAgent .
+    vars W ho hs f F : Float .
 
     op computeSimilarityVector : Agent SetEdge Float Float State -> SetEdge .
     op computeSimilarityVector : Agent SetEdge Float Float State SetEdge -> SetEdge .
@@ -205,23 +198,22 @@ mod MODEL-I-S is
     eq interaction-s(STATE, AG, (<(AG', AG'') : W >, SE), S) = interaction-s(STATE, AG, SE, S) .
 
     op update-i-s : State SetEdge Agent -> Memory .
-    eq update-i-s(NETWORK in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
-        ["o", interaction-s(NETWORK in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS)] ["g", float(group(AG, NETWORK in step: STEPS comm: COMM strat: EDGES))] .
+    eq update-i-s(STATE, SE, AG) =
+        ["o", interaction-s(STATE, AG, SE, paramS)] ["g", float(group(AG, STATE))] .
 endm
 
 mod MODEL-X-S is
     pr MODEL-I-S .
 
-    var STATE            : State .
-    var AG AG' AG''      : Agent .
-    var SE EDGES SETEDGE : SetEdge .
-    var IT IT'           : Item .
-    var M                : Memory .
-    var NEM              : NeMemory .
-    var ST               : String .
-    var F W              : Float .
-    var S COMM STEPS     : Nat .
-    var NETWORK          : Network .
+    var STATE        : State .
+    vars AG AG' AG'' : Agent .
+    var SE           : SetEdge .
+    vars IT IT'      : Item .
+    var M            : Memory .
+    var NEM          : NeMemory .
+    var ST           : String .
+    vars F W         : Float .
+    var S            : Nat .
     
     op i-x : SetEdge State -> SetSetEdge .
     eq i-x(SE, STATE) = selection-s(incidents(SE), SE, STATE, comm(STATE) + steps(STATE)) .
@@ -249,6 +241,6 @@ mod MODEL-X-S is
     eq interaction-x(M) = ["o", computeOpinion(arguments(M))] ["g", float(group(M))] arguments(M) .
 
     op update-x-s : State SetEdge Agent -> Memory .
-    eq update-x-s(NETWORK in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
-        interaction-x(NETWORK in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS) .
+    eq update-x-s(STATE,  SE, AG) =
+        interaction-x(STATE, AG,  SE, paramS) .
 endm

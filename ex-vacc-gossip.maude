@@ -8,14 +8,13 @@ mod TEST is
     pr VACCINES .
 
     --- --------------------
-    var STATE      : State .
-    var SETEDGE SE : SetEdge .
-    var AG         : Agent .
+    var STATE : State .
+    var SE    : SetEdge .
+    var AG    : Agent .
     --- --------------------
 
-    --- eq model = gossip .
     eq moduleName = 'TEST .
-    eq update(STATE, SETEDGE, AG) = update-gossip(STATE, SETEDGE, AG) .
+    eq update(STATE, SE, AG) = update-gossip(STATE, SE, AG) .
     eq strategy(SE, STATE) = gossip(SE) .
 endm
 

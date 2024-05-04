@@ -8,15 +8,16 @@ mod TEST is
     pr VACCINES .
 
     --- --------------------
-    var STATE      : State .
-    var SETEDGE SE : SetEdge .
-    var AG         : Agent .
+    var STATE : State .
+    var SE    : SetEdge .
+    var AG    : Agent .
     --- --------------------
 
-    --- eq model = x-s .
     eq moduleName = 'TEST .
-    eq update(STATE, SETEDGE, AG) = update-x-s(STATE, SETEDGE, AG) .
+    eq update(STATE, SE, AG) = update-x-s(STATE, SE, AG) .
     eq strategy(SE, STATE) = i-x(SE, STATE) .
 endm
 
---- search  init =>* STATE such that consensus(STATE) .
+eof
+
+search  init =>* STATE such that consensus(STATE) .

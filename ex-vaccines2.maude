@@ -9,8 +9,6 @@ mod VACCINES is
     pr MODEL-I-S .
     eq EPSILON = 0.01 .
 
-    vars S L R : State .
-
     op nodes   : -> SetOpinion .
     op edges   : -> SetEdge .
     op initnet : -> Network .

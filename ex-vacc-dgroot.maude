@@ -8,14 +8,13 @@ mod TEST is
     pr VACCINES .
 
     --- --------------------
-    var STATE      : State .
-    var SETEDGE SE : SetEdge .
-    var AG         : Agent .
+    var STATE : State .
+    var SE    : SetEdge .
+    var AG    : Agent .
     --- --------------------
 
-    --- eq model = deGroot .
     eq moduleName = 'TEST .
-    eq update(STATE, SETEDGE, AG) = update-degroot(STATE, SETEDGE, AG) .
+    eq update(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
     eq strategy(SE, STATE) = deGroot(SE) .
 endm
 
@@ -27,4 +26,3 @@ search  init =>* STATE such that consensus(STATE) .
 Consensus:  0 : 4.80
 Steps: 34
 Communications: 272
-

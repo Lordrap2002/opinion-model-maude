@@ -8,16 +8,15 @@ smod TEST is
     pr VACCINES .
 
     --- ----------------------------------
-    vars STATE STATE' L R : State .
-    var SETEDGE SE EDGES  : SetEdge .
-    var STR               : SetSetEdge .
-    vars N N'             : Nat .
-    var AG AG' AG''       : Agent .
+    vars STATE STATE' : State .
+    vars SE EDGES     : SetEdge .
+    var STR           : SetSetEdge .
+    var N             : Nat .
+    var AG            : Agent .
     --- ----------------------------------
 
-    --- eq model = hybrid .
     eq moduleName = 'TEST .
-    eq update(STATE, SETEDGE, AG) = update-hybrid(STATE, SETEDGE, AG) .
+    eq update(STATE, SE, AG) = update-hybrid(STATE, SE, AG) .
     eq strategy(SE, STATE) = hybrid(SE)  .
 ***(  
     eq strategy(hybrid>=(N),  SE, STATE)  = filter>=(N,hybrid(SE))  .
@@ -32,7 +31,8 @@ smod TEST is
     eq filter>=(N, SE ; STR) = if | SE | >= N then SE else mt fi ; filter>=(N, STR) .
     op filter<= : Nat SetSetEdge -> SetSetEdge .
     eq filter<=(N, mt) = mt .
-    eq filter<=(N, SE ; STR) = if | SE | <= N then SE else mt fi ; filter<=(N, STR) . )
+    eq filter<=(N, SE ; STR) = if | SE | <= N then SE else mt fi ; filter<=(N, STR) .
+)
 
  --- ---------------
  --- The strategies
@@ -58,6 +58,7 @@ smod TEST is
 endsm
 
 set print attribute on .
+
 eof 
 
 --- Reaching consensus before 300 communications 
@@ -87,4 +88,3 @@ dsrew [1] init using round(filter>=(4, strategy(hybrid,edges))) .
 dsrew [1] init using round(filter>=(5, strategy(hybrid,edges))) .
 
 dsrew [1] init using round(filter>=(6, strategy(hybrid,edges))) .
-

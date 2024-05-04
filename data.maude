@@ -82,12 +82,12 @@ fmod STATE is
  var SA           : SetAgent .
  var OP           : Opinion .
  vars AG AG' AG'' : Agent .
- vars W W'        : Float .
+ var W            : Float .
  vars SO SO' SO'' : SetOpinion .
  var STEPS        : Nat .
  var COMM         : Nat .
  var EDGES        : SetEdge .
- var I I'         : Info .                   --- CAMBIO
+ vars I I'        : Info .                   --- CAMBIO
  --- ------------------
 
  --- Some selectors 
@@ -102,13 +102,13 @@ fmod STATE is
  eq steps( < nodes: SN ; edges: SE >  in step: STEPS comm: COMM strat: EDGES)  = STEPS .
  eq comm(  < nodes: SN ; edges: SE >  in step: STEPS comm: COMM strat: EDGES)  = COMM .
 
- --- CAMBIO, pasar opinion con metanivel
+ --- CAMBIO
  op opinion : Agent State -> Float .
  op opinion : Info -> Float .
 
- --- CAMBIO, sacar información de un agente
- op information : Agent State -> Info .
- eq information(AG, < nodes: (< AG : I >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = I .
+ --- CAMBIO
+ --- op information : Agent State -> Info .
+ --- eq information(AG, < nodes: (< AG : I >, SN) ; edges: SE > in step: STEPS comm: COMM strat: EDGES) = I .
 
  --- Set of target agents in a set of edges
  op incidents  : SetEdge          -> SetAgent .
@@ -151,8 +151,8 @@ fmod STATE is
  op consensus : SetOpinion -> Bool .
  eq consensus(< nodes: SO ; edges: SE > in step: STEPS comm: COMM strat: EDGES ) =
     consensus(SO) .
+ --- CAMBIO, aplicar info
  ceq consensus(( < AG : I > ,  < AG' : I' > , SO)) = false 
-      --- CAMBIO, aplicar info
      if abs(opinion(I) - opinion(I')) > EPSILON .
  eq consensus(SO) = true [owise] .
 
@@ -175,24 +175,20 @@ fmod STRATEGY is
 
  --- --------------------------
  var SE            : SetEdge .
- vars STR STR'     : SetSetEdge .
- var E             : Edge .
- var N             : Nat .
+ var STR           : SetSetEdge .
  vars STATE STATE' : State .
  var SA            : SetAgent .
  var AG            : Agent .
- vars MIN MAX      : Float .
- var DIST          : Float .
- var MEAN          : Float .
- var SUM           : Float .
+ vars MIN MAX SUM  : Float .
+ vars DIST MEAN    : Float .
  --- ----------------
 
 --------------------------------------------------------------------------
- --- CAMBIO, pasar la estrategia por metanivel
+ --- CAMBIO, que sea definida por el usuario
  op strategy : SetEdge State -> SetSetEdge .
 
  --- To be defined by the user
- op update : State SetEdge Agent -> Info .       --- CAMBIO, usar Info
+ op update : State SetEdge Agent -> Info .       --- CAMBIO, usar info
 
  --- Returning the distance between the lowest and the highest belif
  op bdistance : State SetEdge -> Float .
