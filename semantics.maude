@@ -1,0 +1,131 @@
+***(
+
+Definition of the atomic rule and the step rule.
+
+The following operators must be defined in the user-module 
+
+op EPSILON : -> Float .                    --- Epsilon for checking consensus
+op model :        -> Model .               --- Defining the strategy
+op moduleName : -> Qid .                   --- Module to be analyzed
+op update : State SetEdge Agent -> Float . --- Update function
+
+***)
+
+load data .
+
+mod TRANSITION-SYSTEM is
+ pr STRATEGY .
+ pr RANDOM .
+ pr CONVERSION .
+ pr FLOAT .
+ 
+ --- -------------------------------
+ vars AG AG1 AG2 AGENT : Agent .
+ vars AG' AG''         : Agent .
+ vars SUMW PRODW ACC   : Float .
+ vars W VAL            : Float .
+ var BELIEF            : Info .                --- CAMBIO, usar Info
+ var BELIEF'           : Info .                --- CAMBIO, usar Info
+ var NETWORK           : Network .
+ vars SETEDGE NEDGES   : SetEdge .
+ vars EDGES            : SetEdge .
+ var NNODES            : SetOpinion .
+ var STATE             : State .
+ var SETAG             : SetAgent .
+ var COUNT             : Nat .
+ vars PHI PHI'         : Float .
+ --- -------------------------------
+
+ --- ----------------
+ --- Atomic transition 
+ --- ----------------
+ crl [atomic] : < AGENT : BELIEF >  =>  < AGENT : BELIEF' >
+     if BELIEF' := update(STATE, EDGES, AGENT) [nonexec] .
+endm
+
+
+--- Definition of the different rewrite relations (according to the strategy)
+mod REW-RELATION is
+ pr META-LEVEL * (op nil to nil', op __ to _;;_, op append to append', 
+                  op tail to tail', op head to head', op last to last', 
+                  op front to front', op reverse to reverse', op size to size',
+                  op occurs to occurs', op $reverse to $reverse', op $size to $size') .
+ pr TRANSITION-SYSTEM . 
+
+ op error : -> Opinion .
+
+ --- To be defined in the user's module
+ sort Model .
+ op model :        -> Model .
+ op moduleName : -> Qid .
+
+-------------------------------
+ var Q            : Qid .
+ var NETWORK      : Network .
+ var M            : Module .
+ var SETNODE      : SetOpinion .
+ vars SO SO' SO'' : SetOpinion .
+ var SETEDGE      : SetEdge .
+ var SETEDGE'     : SetEdge .
+ vars AG AG'      : Agent .
+ vars W W'        : Float .
+ var SETAG        : SetAgent .
+ var STATE        : State .
+ var STATE'       : State .
+ var RES?         : ResultTriple? .
+ var OP           : Opinion .
+ var SUBS         : Substitution .
+ var SSE          : SetSetEdge .
+ var STEPS        : Nat .
+ var COMM         : Nat .
+ var EDGES        : SetEdge .
+ var I            : Info .                  --- CAMBIO
+-------------------------------
+
+ crl [step] :   STATE => STATE'
+ if
+     not consensus(STATE) /\ --- just to avoid unnecessary rewritings 
+     SETEDGE' ; SSE := strategy(edges(STATE), STATE) /\        --- CAMBIO
+     STATE'         := step([moduleName], STATE,  SETEDGE') 
+     .
+
+ --- A rewriting step according to the strategy 
+ op step : Module State SetAgent SetOpinion SetEdge -> State .
+ op step : Module State                     SetEdge -> State .
+ eq step(M, STATE, EDGES) = step(M, STATE, incidents(EDGES), empty, EDGES) .
+
+ eq step(M, STATE, empty, SO, EDGES) =  < nodes: ( nodes(STATE) // SO) ; edges: edges(STATE) > 
+                                        in step: (steps(STATE) + 1) 
+                                        comm: (comm(STATE) + | non-self(EDGES) | ) strat: EDGES .
+ eq step(M, STATE, (AG, SETAG), SO, EDGES) = 
+    step(M, STATE, SETAG, (SO, next(M, AG, EDGES, STATE)), EDGES) .
+
+ op next : Module Agent SetEdge State -> Opinion . 
+ ceq  next(M, AG, EDGES, STATE) = OP
+  if  SUBS := 'AGENT:Agent   <- upTerm(AG) ; 
+              'BELIEF:Info   <- upTerm(information(AG, STATE)) ;     --- CAMBIO
+              'STATE:State   <- upTerm(STATE) ; 
+              'EDGES:SetEdge <- upTerm(EDGES) /\ 
+      RES? := metaApply(M, upTerm(< AG : information(AG, STATE) >), 'atomic, SUBS, 0) /\
+      OP   := if RES? == failure then error else downTerm(getTerm(RES?), error) fi . --- CAMBIO
+endm
+
+--- ESTE MODULO YA NO ES NECESARIO
+mod REW-RELATION-UPDATE is
+ pr FLOAT .
+ including  REW-RELATION .
+
+-------------------------------
+ var NETWORK         : Network .
+ vars AG AG' AG''    : Agent .
+ vars SETEDGE SE     : SetEdge .
+ var NNODES          : SetOpinion .
+ var COUNT           : Nat .
+ var SCOUNT          : Float . 
+ vars SUMW PRODW ACC : Float .
+ vars PHI PHI'       : Float .                  
+ vars W VAL          : Float .
+ var STEPS           : Nat .
+ var COMM            : Nat .
+-------------------------------
+endm

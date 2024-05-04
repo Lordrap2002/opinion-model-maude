@@ -1,0 +1,22 @@
+***(
+ Analysis with I-E
+***)
+
+load ex-vaccines2 .
+
+mod TEST is
+    pr VACCINES .
+
+    --- --------------------
+    var STATE      : State .
+    var SETEDGE SE : SetEdge .
+    var AG         : Agent .
+    --- --------------------
+
+    --- eq model = i-e .
+    eq moduleName = 'TEST .
+    eq update(STATE, SETEDGE, AG) = update-i-e(STATE, SETEDGE, AG) .
+    eq strategy(SE, STATE) = i-e(SE, comm(STATE) + steps(STATE)) .
+endm
+
+--- search  init =>* STATE such that consensus(STATE) .

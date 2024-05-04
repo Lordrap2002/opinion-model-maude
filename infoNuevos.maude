@@ -1,0 +1,254 @@
+***( Archivo con los modulos necesarios para las variantes
+del modelo 1 del texto de Daniel )
+
+load semantics .
+
+fmod ITEM is
+    pr STRING . 
+    pr FLOAT .
+    sort Item .
+    var S : String .
+    var F : Float .
+
+    op [_,_] : String Float -> Item [ctor] .
+    op second : Item -> Float .
+    eq second([S, F]) = F .
+endfm
+
+view Item from TRIV to ITEM is
+  sort Elt to Item .
+endv
+
+mod DEFINITION1 is
+    pr REW-RELATION .
+    pr CONVERSION .
+    pr RANDOM .
+    pr COUNTER .
+    pr ITEM .
+    pr LIST{Item} * (sort List{Item} to Memory, sort NeList{Item} to NeMemory) .
+    subsort Nat < Agent .
+    subsort Memory < Info .
+
+    var IT IT'         : Item .
+    var W F o1 o2 ho o : Float .
+    vars oi oj R       : Float .
+    var M              : Memory .
+    var ST             : String .
+    var X S Min1 Max1  : Nat .
+    var STEPS COMM     : Nat .
+    var g1 g2          : Int .
+    var AG AG' AG''    : Agent .
+    var SN             : SetOpinion .
+    var SE EDGES SE'   : SetEdge .
+
+    op paramHo : -> Float .
+    eq paramHo = 3.0 .
+
+    op paramHs : -> Float .
+    eq paramHs = 4.0 .
+
+    op paramS : -> Nat .
+    eq paramS = 2 .
+
+    eq opinion(AG, < nodes: (< AG : [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = F .
+    eq opinion([ST, F] M) = F .
+
+    op group : Agent State -> Int .
+    op group : Memory -> Int .
+    eq group(AG, < nodes: (< AG : IT [ST, F] M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = rat(F) .
+    eq group(IT [ST, W] M) = rat(W) .
+
+    op arguments : Agent State -> Memory .
+    op arguments : Memory -> Memory .
+    eq arguments(AG, < nodes: (< AG : IT IT' M >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES ) = M .
+    eq arguments(IT IT' M) = M .
+
+    op rand : Nat -> Nat .
+    eq rand(X) = random(X + 41723) .
+
+    op randFloat : Nat -> Float .
+    eq randFloat(X) = float(random(X + 10322) / 4294967296) .
+
+    op genRandom : Nat Nat Nat -> Nat .
+    op genRandom : Float Nat -> Float   .
+    eq genRandom(Min1, Max1, X) = (rand(X) rem ((Max1 - Min1) + 1)) + Min1 .
+    eq genRandom(F, X) = randFloat(X) * F .
+
+    op selectElement : Memory Nat -> Item .
+    eq selectElement((IT M), 0) = IT .
+    eq selectElement((IT M), s(X)) = selectElement(M, X) .
+
+    op randomPick : Memory Nat -> Item .
+    eq randomPick(M, X) = selectElement(M, genRandom(0,size(M) - 1, X)) .
+
+    op computeSimilarity : Int Float Int Float Float -> Float .
+    eq computeSimilarity(g1,o1,g2,o2,ho) = 
+        (1.0 - ((float(abs(g1 - g2)) + (ho * abs(o1 - o2)))) / (2.0 + (2.0 * ho))) .
+
+    op influence2 : Agent SetEdge -> SetEdge .
+    op influence2 : Agent SetEdge SetEdge  -> SetEdge .
+    eq influence2(AG, SE) = influence2(AG, SE, empty) .
+    eq influence2(AG, empty, SE) = SE .
+    eq influence2(AG, (<(AG' , AG) : W >, SE), SE') = influence2(AG, SE, (SE', <(AG', AG) : W >)) .
+    eq influence2(AG, (<(AG', AG'') : W >, SE), SE') = influence2(AG, SE, SE') [owise] .
+
+    op truncatingFunct : Float -> Float .
+    ceq truncatingFunct(o) = 1.0 if o > 1.0 .
+    ceq truncatingFunct(o) = -1.0 if o < -1.0  .
+    eq truncatingFunct(o) = o .
+
+    op computeProb : Float -> Float .
+    eq computeProb(o) = 0.5 * (o + 1.0) .
+
+    op computeOpAdj : Nat Float Float Nat -> Float .
+    op computeOpAdj : Float Float Nat Float -> Float .
+    op computeOpAdj : Bool Bool Nat -> Float .	
+    eq computeOpAdj(X, oj, oi, S) = computeOpAdj(oj, oi, S, randFloat(X)) .
+    eq computeOpAdj(oj, oi, S, R) = computeOpAdj((R < computeProb(oj)), (R < computeProb(oi)), S) .
+    eq computeOpAdj(true,false,S) = 2.0 / float(S) . --- j picks pro, i drops con
+    eq computeOpAdj(false,true,S) = -2.0 / float(S) . --- j picks con, i drops pro
+    eq computeOpAdj(true,true,S) = 0.0 . --- j picks pro, i drops pro
+    eq computeOpAdj(false,false,S) = 0.0 . --- j picks con, i picks con
+endm
+
+mod MODEL-I-E is
+    pr DEFINITION1 .
+
+    var STATE                : State .
+    var SETEDGE SE EDGES SE' : SetEdge .
+    var AG AG' AG''          : Agent .
+    var STEPS COMM X S       : Nat .
+    var E                    : Edge .
+    var SA                   : SetAgent .
+    var W ho hp              : Float .
+    var NETWORK              : Network .
+
+    op selectElement : SetEdge Nat -> Edge .
+    eq selectElement((E, SE), 0) = E .
+    eq selectElement((E, SE), s(X)) = selectElement(SE, X) .
+
+    op randomPick : SetEdge Nat -> Edge .
+    eq randomPick(SE, X) = selectElement(SE, genRandom(0,| SE | - 1, X)) .
+
+    op selection-e : SetAgent SetEdge Nat -> SetEdge .
+    op selection-e : SetAgent SetEdge SetEdge Nat -> SetEdge . 
+    eq selection-e(SA, SE, X) = selection-e(SA, SE, empty, X) .
+    eq selection-e(empty, SE, SE', X) = SE' .
+    eq selection-e((AG, SA), SE, SE', X) = selection-e(SA, SE, (SE', randomPick(influence2(AG, SE), X)), X + 1) .
+
+    op i-e : SetEdge Nat -> SetSetEdge .                
+    eq i-e(SE, X) = selection-e(incidents(SE), SE, X) .
+
+    op interaction-e : State Agent SetEdge Nat Float Float -> Float .
+    eq interaction-e(STATE, AG, (<(AG', AG) : W >, SE), S, ho, hp) = 
+        truncatingFunct(opinion(AG, STATE) + computeOpAdj(comm(STATE), opinion(AG', STATE),opinion(AG, STATE), S) * (computeSimilarity(group(AG, STATE), opinion(AG, STATE), group(AG', STATE), opinion(AG', STATE), ho) ^ hp)) .
+    eq interaction-e(STATE, AG, (<(AG', AG'') : W >, SE), S, ho, hp) = 
+        interaction-e(STATE, AG, SE, S, ho, hp) .
+
+    op update-i-e : State SetEdge Agent -> Memory .
+    eq update-i-e(NETWORK  in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
+        ["o", interaction-e(NETWORK  in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS, paramHo, paramHs)] ["g", float(group(AG, NETWORK  in step: STEPS comm: COMM strat: EDGES))] .
+endm
+
+mod MODEL-I-S is
+    pr DEFINITION1 .
+
+    var STATE                : State .
+    var SETEDGE SE EDGES SE' : SetEdge .
+    var AG AG' AG''          : Agent .
+    var STEPS COMM X S       : Nat .
+    var E                    : Edge .
+    var SA                   : SetAgent .
+    var W ho hs f F          : Float .
+    var NETWORK              : Network .
+
+    op computeSimilarityVector : Agent SetEdge Float Float State -> SetEdge .
+    op computeSimilarityVector : Agent SetEdge Float Float State SetEdge -> SetEdge .
+    eq computeSimilarityVector(AG, SE, ho, hs, STATE) = computeSimilarityVector(AG, SE, ho, hs, STATE, empty) .
+    eq computeSimilarityVector(AG, (<(AG', AG) : W >, SE), ho, hs, STATE, SE') = 
+        computeSimilarityVector(AG, SE, ho, hs, STATE, (<(AG', AG) : (computeSimilarity(group(AG, STATE), opinion(AG, STATE), group(AG', STATE), opinion(AG, STATE), ho) ^ hs)>, SE')) .
+    eq computeSimilarityVector(AG, empty, ho, hs, STATE, SE) = SE .
+
+    op accumulate : SetEdge -> SetEdge .
+    op accumulate : SetEdge Float SetEdge -> SetEdge .
+    eq accumulate(SE) = accumulate(SE, 0.0, empty) .
+    eq accumulate((<(AG, AG') : f >, SE), F, SE') = accumulate(SE, (f + F), (<(AG, AG') : f + F >, SE')) .
+    eq accumulate(empty, F, SE) = SE .
+
+    op maxValue : SetEdge -> Float .
+    op maxValue : SetEdge Float -> Float .
+    eq maxValue(SE) =  maxValue(SE, 0.0) .
+    ceq maxValue((<(AG, AG') : f >, SE), F) = maxValue(SE, F) if f <= F .
+    ceq maxValue((<(AG, AG') : f >, SE), F) = maxValue(SE, f) if F < f .
+    eq maxValue(empty, F) = F .
+
+    op choose : SetEdge Float -> Edge .
+    ceq choose((<(AG, AG') : f >, SE), F) = <(AG, AG') : f > if F <= f .
+    eq choose((<(AG, AG') : f >, SE), F) = choose(SE, F) [owise] .
+
+    op choosePartner : Agent SetEdge State Float Float -> Edge .
+    op choosePartner : SetEdge State -> Edge .
+    eq choosePartner(AG, SE, STATE, ho, hs) = choosePartner(computeSimilarityVector(AG, SE, ho, hs, STATE), STATE) .
+    eq choosePartner(SE, STATE) = choose(accumulate(SE), genRandom(maxValue(accumulate(SE)), comm(STATE) + steps(STATE))) .
+
+    op selection-s : SetAgent SetEdge State Nat -> SetEdge .
+    op selection-s : SetAgent SetEdge SetEdge State Nat -> SetEdge . 
+    eq selection-s(SA, SE, STATE, X) = selection-s(SA, SE, empty, STATE, X) .
+    eq selection-s(empty, SE, SE', STATE, X) = SE' .
+    eq selection-s((AG, SA), SE, SE', STATE, X) = selection-s(SA, SE, (SE', choosePartner(AG, influence2(AG, SE), STATE, paramHo, paramHs)), STATE, X + 1) .
+
+    op i-s : SetEdge State -> SetSetEdge .
+    eq i-s(SE, STATE) = selection-s(incidents(SE), SE, STATE, comm(STATE) + steps(STATE)) .
+
+    op interaction-s : State Agent SetEdge Nat -> Float .
+    eq interaction-s(STATE, AG, (<(AG', AG) : W >, SE), S) = truncatingFunct(opinion(AG, STATE) + computeOpAdj(comm(STATE), opinion(AG', STATE),opinion(AG, STATE), S)) .
+    eq interaction-s(STATE, AG, (<(AG', AG'') : W >, SE), S) = interaction-s(STATE, AG, SE, S) .
+
+    op update-i-s : State SetEdge Agent -> Memory .
+    eq update-i-s(NETWORK in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
+        ["o", interaction-s(NETWORK in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS)] ["g", float(group(AG, NETWORK in step: STEPS comm: COMM strat: EDGES))] .
+endm
+
+mod MODEL-X-S is
+    pr MODEL-I-S .
+
+    var STATE            : State .
+    var AG AG' AG''      : Agent .
+    var SE EDGES SETEDGE : SetEdge .
+    var IT IT'           : Item .
+    var M                : Memory .
+    var NEM              : NeMemory .
+    var ST               : String .
+    var F W              : Float .
+    var S COMM STEPS     : Nat .
+    var NETWORK          : Network .
+    
+    op i-x : SetEdge State -> SetSetEdge .
+    eq i-x(SE, STATE) = selection-s(incidents(SE), SE, STATE, comm(STATE) + steps(STATE)) .
+
+    op addItem : Memory -> Memory .
+    op addItem : Memory Item -> Memory .
+    eq addItem(IT M) = IT addItem(M, IT) .
+    eq addItem(IT NEM, IT) = NEM .
+    eq addItem(IT' NEM, IT) = IT' addItem(NEM, IT) .
+    eq addItem(IT, IT) = nil .
+    eq addItem(IT', IT) = nil .
+
+    op getPosArg : Memory -> Nat .
+    ceq getPosArg([ST, F] M) = 1 + getPosArg(M) if F > 0.0 .
+    ceq getPosArg([ST, F] M) = getPosArg(M) if F < 0.0 .
+    eq getPosArg(nil) = 0 [owise] . 
+
+    op computeOpinion : Memory -> Float .
+    eq computeOpinion(M) = 2.0 * ( float(getPosArg(M)) / float(size(M)) ) - 1.0 .
+
+    op interaction-x : State Agent SetEdge Nat -> Memory .
+    op interaction-x : Memory -> Memory .
+    eq interaction-x(STATE, AG, (<(AG', AG) : W >, SE), S) = interaction-x(["o", opinion(AG,STATE)] ["g", float(group(AG,STATE))] addItem(randomPick(arguments(AG', STATE), comm(STATE) + steps(STATE)) arguments(AG, STATE))) .
+    eq interaction-x(STATE, AG, (<(AG', AG'') : W >, SE), S) = interaction-x(STATE, AG, SE, S) .
+    eq interaction-x(M) = ["o", computeOpinion(arguments(M))] ["g", float(group(M))] arguments(M) .
+
+    op update-x-s : State SetEdge Agent -> Memory .
+    eq update-x-s(NETWORK in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) =
+        interaction-x(NETWORK in step: STEPS comm: COMM strat: EDGES, AG, SETEDGE, paramS) .
+endm

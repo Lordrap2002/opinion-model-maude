@@ -1,0 +1,123 @@
+***( Archivo con la información de los modelos originales )
+
+load semantics .
+
+mod DEFINITION is
+    pr REW-RELATION .
+    subsort Float < Info .
+    subsort Nat < Agent .
+
+    var AG          : Agent .
+    var F           : Float .
+    var SN          : SetOpinion .
+    var SE EDGES    : SetEdge .
+    vars STEPS COMM : Nat .
+    
+    eq opinion(AG, < nodes: (< AG : F >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
+    eq opinion(F) = F .
+endm
+
+mod DEGROOT is
+    pr DEFINITION .
+
+    var SETEDGE     : SetEdge .
+    var AG AG' AG'' : Agent .
+    var SE          : SetEdge .
+    var NNODES      : SetOpinion .
+    var STEPS       : Nat .
+    var COMM        : Nat .
+    var EDGES       : SetEdge .
+    var NETWORK     : Network .
+    var COUNT       : Nat .
+    var SCOUNT      : Float . 
+    vars SUMW       : Float .
+    vars PHI PHI' W : Float .
+
+    op deGroot : SetEdge -> SetSetEdge .
+    eq deGroot(SE) = SE .
+
+    op update-degroot : State SetEdge Agent -> Float .
+    ceq update-degroot(NETWORK  in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) = 
+        if SCOUNT == 0.0 then opinion(AG, NETWORK  in step: STEPS comm: COMM strat: EDGES)
+            else opinion(AG,  NETWORK  in step: STEPS comm: COMM strat: EDGES) + (SUMW / SCOUNT)
+        fi
+        if 
+            SCOUNT  := sum-W(AG, SETEDGE) /\ 
+            SUMW := prod-diff(AG, nodes(NETWORK  in step: STEPS comm: COMM strat: EDGES ), SETEDGE) .
+
+    op prod-diff : Agent SetOpinion SetEdge -> Float .
+    op prod-diff : Agent SetOpinion SetEdge Float -> Float .
+    eq prod-diff(AG, NNODES, SETEDGE) = prod-diff(AG, NNODES, SETEDGE, 0.0) .
+    eq prod-diff(AG, NNODES, empty, SUMW) = SUMW .
+    eq prod-diff(AG, (NNODES, < AG : PHI > , < AG' :  PHI' >), ( < (AG', AG ) :  W  > ,SETEDGE), SUMW) = 
+        prod-diff(AG, (NNODES, < AG : PHI > , < AG' : PHI' >), SETEDGE, SUMW + (PHI' - PHI) * W) .
+    eq prod-diff(AG, NNODES, ( < (AG' , AG'') :  W  >, SETEDGE), SUMW) = 
+        prod-diff(AG, NNODES, SETEDGE, SUMW) [owise] .
+
+    op sum-W : Agent SetEdge -> Float .
+    op sum-W : Agent SetEdge Float -> Float .
+    eq sum-W(AG, SETEDGE) = sum-W(AG, SETEDGE, 0.0) .
+    eq sum-W(AG, empty, SUMW) = SUMW .
+    eq sum-W(AG, ( < (AG', AG ) :  W  >, SETEDGE), SUMW) = 
+        sum-W(AG, SETEDGE , SUMW + W ) .
+    eq sum-W(AG, ( < (AG' , AG'') :  W  >, SETEDGE), SUMW) = 
+        sum-W(AG, SETEDGE, SUMW) [owise] .
+endm
+
+mod GOSSIP is
+    pr DEFINITION .
+
+    var SETEDGE     : SetEdge .
+    var AG AG'      : Agent .
+    var SE          : SetEdge .
+    var NNODES      : SetOpinion .
+    var STEPS       : Nat .
+    var COMM        : Nat .
+    var EDGES       : SetEdge .
+    var NETWORK     : Network .
+    vars PHI PHI' W : Float .
+    var STR         : SetSetEdge .
+    var E           : Edge .
+
+    op gossip  : SetEdge           -> SetSetEdge [memo] .
+    op $gossip : SetEdge SetSetEdge -> SetSetEdge .
+
+    eq gossip(SE) = $gossip(SE, mt) .
+    eq $gossip(empty, STR) = STR .
+    eq $gossip((E, SE),  STR) = $gossip(SE, (STR ; E)) .
+
+
+    op update-gossip : State SetEdge Agent -> Float .
+    ceq update-gossip(  NETWORK  in step: STEPS comm: COMM strat: EDGES, < (AG' , AG) : W >, AG) = 
+      opinion(AG,  NETWORK  in step: STEPS comm: COMM strat: EDGES) + W * (PHI' - PHI)
+    if
+      PHI  := opinion(AG, NETWORK  in step: STEPS comm: COMM strat: EDGES) /\
+      PHI' := opinion(AG', NETWORK  in step: STEPS comm: COMM strat: EDGES) .
+    eq update-gossip(NETWORK  in step: STEPS comm: COMM strat: EDGES, SETEDGE, AG) = 
+      opinion(AG, NETWORK  in step: STEPS comm: COMM strat: EDGES) [owise] .
+endm
+
+mod HYBRID is 
+    pr DEGROOT .
+
+    var STATE      : State .
+    var AG         : Agent .
+    var E          : Edge .
+    var STR STR'   : SetSetEdge .
+    var SE SETEDGE : SetEdge .
+
+    op hybrid  : SetEdge -> SetSetEdge [memo] .
+    eq hybrid(empty) = mt .
+    ceq hybrid((E, SE)) = 
+        STR' ; add(E, STR') 
+    if STR' := hybrid(SE) .
+
+    op add  : Edge SetSetEdge          -> SetSetEdge .
+    op $add : Edge SetSetEdge SetSetEdge -> SetSetEdge .
+    eq add(E, STR) = $add(E, STR, mt) .
+    eq $add(E, mt, STR') = E ; STR' .
+    eq $add(E, (SE ; STR), STR') = $add(E, STR, STR' ; (E, SE)) .
+
+    op update-hybrid : State SetEdge Agent -> Float .
+    eq update-hybrid(STATE, SETEDGE, AG) = update-degroot(STATE, SETEDGE, AG) .
+endm

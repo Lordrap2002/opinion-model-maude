@@ -1,0 +1,90 @@
+***(
+ Analysis with Hybrid
+***)
+
+load ex-vaccines1 .
+
+smod TEST is
+    pr VACCINES .
+
+    --- ----------------------------------
+    vars STATE STATE' L R : State .
+    var SETEDGE SE EDGES  : SetEdge .
+    var STR               : SetSetEdge .
+    vars N N'             : Nat .
+    var AG AG' AG''       : Agent .
+    --- ----------------------------------
+
+    --- eq model = hybrid .
+    eq moduleName = 'TEST .
+    eq update(STATE, SETEDGE, AG) = update-hybrid(STATE, SETEDGE, AG) .
+    eq strategy(SE, STATE) = hybrid(SE)  .
+***(  
+    eq strategy(hybrid>=(N),  SE, STATE)  = filter>=(N,hybrid(SE))  .
+    eq strategy(hybrid=(N) ,  SE, STATE)  = filter=(N,hybrid(SE))  .
+    eq strategy(hybrid<=(N) ,  SE, STATE) = filter<=(N,hybrid(SE))  .
+
+    op filter= : Nat SetSetEdge -> SetSetEdge .
+    eq filter=(N, mt) = mt .
+    eq filter=(N, SE ; STR) = if | SE | == N then SE else mt fi ; filter=(N, STR) .
+    op filter>= : Nat SetSetEdge -> SetSetEdge .
+    eq filter>=(N, mt) = mt .
+    eq filter>=(N, SE ; STR) = if | SE | >= N then SE else mt fi ; filter>=(N, STR) .
+    op filter<= : Nat SetSetEdge -> SetSetEdge .
+    eq filter<=(N, mt) = mt .
+    eq filter<=(N, SE ; STR) = if | SE | <= N then SE else mt fi ; filter<=(N, STR) . )
+
+ --- ---------------
+ --- The strategies
+ --- ---------------
+
+ --- For testing some strategies 
+ --- SETEDGE' must be chosen externally 
+ crl [step'] :   STATE  => STATE'
+ if  STATE'  := step([moduleName], STATE, EDGES) [nonexec] .
+
+
+ --- Taking arbitrary one element of the set of sets and then removing it
+ strat round :       SetSetEdge @ State . 
+ strat round' : Nat  SetSetEdge @ State . 
+
+ --- Similar to the previous one but the second Nat-parameter is used as upper-bound
+ strat round'' : Nat Nat SetSetEdge @ State . 
+
+ sd round(EDGES ; STR) := 
+    (match STATE s.t. consensus(STATE))
+    or-else step'[EDGES <- EDGES] ; round(STR)  .
+
+endsm
+
+set print attribute on .
+eof 
+
+--- Reaching consensus before 300 communications 
+python -m umaudemc  scheck example-hybrid.maude init formula.quatex -a 0.05 -d 0.01   --jobs 0 --assign uniform 
+Number of simulations = 3450
+  μ = 0.9011594202898551        σ = 0.29849111329162514       r = 0.009963739924599339
+
+
+python -m umaudemc  scheck ex-vacc-hybrid.maude init formula.quatex -a 0.05 -d 0.01   --jobs 0 --assign  "term(variance(L,R))"
+Number of simulations = 30
+  μ = 1.0                       σ = 0.0                       r = 0.0
+
+python -m umaudemc  scheck ex-vacc-hybrid.maude init formula.quatex -a 0.05 -d 0.01   --jobs 0 --assign  "term(distance(L,R))"
+Number of simulations = 480
+  μ = 0.9875                    σ = 0.1112183430598806        r = 0.009974764090591283
+
+
+--- Considering all the edges and eliminating one in each iteration
+--- 69 steps
+dsrew [1] init using round(strategy(hybrid,edges)) .
+
+--- Considering only those >=3
+dsrew [1] init using round(filter>=(3, strategy(hybrid,edges))) .
+
+dsrew [1] init using round(filter>=(4, strategy(hybrid,edges))) .
+
+dsrew [1] init using round(filter>=(5, strategy(hybrid,edges))) .
+
+dsrew [1] init using round(filter>=(6, strategy(hybrid,edges))) .
+
