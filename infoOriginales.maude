@@ -94,8 +94,11 @@ mod HYBRID is
     var STATE      : State .
     var AG         : Agent .
     var E          : Edge .
-    vars STR STR'  : SetSetEdge .
+    vars STR STR' : SetSetEdge .
     var SE         : SetEdge .
+    var N          : Nat .
+
+    op mt : -> SetSetEdge [ctor] .
 
     op hybrid  : SetEdge -> SetSetEdge [memo] .
     eq hybrid(empty) = mt .
@@ -109,6 +112,36 @@ mod HYBRID is
     eq $add(E, mt, STR') = E ; STR' .
     eq $add(E, (SE ; STR), STR') = $add(E, STR, STR' ; (E, SE)) .
 
+    op filter= : Nat SetSetEdge -> SetSetEdge .
+    eq filter=(N, mt) = mt .
+    eq filter=(N, SE ; STR) = if | SE | == N then SE else mt fi ; filter=(N, STR) .
+    op filter>= : Nat SetSetEdge -> SetSetEdge .
+    eq filter>=(N, mt) = mt .
+    eq filter>=(N, SE ; STR) = if | SE | >= N then SE else mt fi ; filter>=(N, STR) .
+    op filter<= : Nat SetSetEdge -> SetSetEdge .
+    eq filter<=(N, mt) = mt .
+    eq filter<=(N, SE ; STR) = if | SE | <= N then SE else mt fi ; filter<=(N, STR) .
+
     op update-hybrid : State SetEdge Agent -> Float .
     eq update-hybrid(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
+    -----------------------------------------------------------------
+    var AG' AG''    : Agent .
+    var F F' F''    : Float .
+    var SO          : SetOpinion .
+    vars STEPS COMM : Nat .
+    var E'          : SetSetEdge .
+    
+    op s1 : SetEdge State -> SetSetEdge .
+    op s1 : SetEdge Agent -> SetSetEdge .
+    eq s1(SE, STATE) = s1(SE, distant1(nodes(STATE), mean(STATE, incidents(SE)))) .
+    eq s1((< (AG', AG) : F >, SE), AG) = < (AG', AG) : F > , s1(SE, AG) .
+    eq s1((< (AG', AG'') : F >, SE), AG) = s1(SE, AG) .
+    eq s1(empty, AG) = empty .
+
+    op distant1 : SetOpinion Float -> Agent .
+    op distant1 : SetOpinion Float Float Agent -> Agent .
+    eq distant1((< AG : F' >, SO), F) = distant1(SO, F, F', AG) .
+    ceq distant1((< AG : F'' >, SO), F, F', AG') = distant1(SO, F, F'', AG) if abs(F - F') < abs(F - F'') .
+    ceq distant1((< AG : F'' >, SO), F, F', AG') = distant1(SO, F, F', AG') if abs(F - F') >= abs(F - F'') .
+    eq distant1(empty, F, F', AG) = AG .
 endm

@@ -1,7 +1,7 @@
 from sys import stdin
 import random as r
 
-def main():
+def nodes1():
     l = []
     m = []
     o = []
@@ -24,10 +24,26 @@ def main():
             print(" [\"%d\", %1.1f]" % (j, m[i][j]), end="")
         print(" > ,")
 
-def mai():
+def edges1():
     for i in range(10):
         for j in range(10):
             if j != i:
                 print("< (%d , %d) : 1.0 > ," % (i, j))
 
-mai()
+def nodes2(n):
+    for i in range(n):
+        print("< %d : %1.2f >, " % (i, r.random() * (1 if r.random() >= 0.5 else -1)), end="")
+    print()
+
+def edges2(n):
+    for i in range(n):
+        for j in range(n):
+            if j != i:
+                print("< (%d , %d) : %1.2f > ," % (i, j, r.random()), end="")
+        print()
+    print()
+
+nodes2(10)
+edges2(10)
+
+#search [3] init =>* STATE such that consensus(STATE) .

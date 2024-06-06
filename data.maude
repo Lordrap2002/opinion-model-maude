@@ -116,7 +116,7 @@ fmod STATE is
 
  eq incidents(SE) = $incidents(SE, empty) .
  eq $incidents(empty, SA) = SA .
- eq $incidents(( <  (AG , AG') : W >, SE), SA) = 
+ eq $incidents((< (AG , AG') : W >, SE), SA) = 
     $incidents(SE, (SA, AG')) .
 
  --- Set of source and target agents in a set of edges
