@@ -78,11 +78,11 @@ fmod STATE is
 
  --- ------------------
  var SN           : SetOpinion .
- var SE           : SetEdge .
+ var SE SE'       : SetEdge .
  var SA           : SetAgent .
  var OP           : Opinion .
  vars AG AG' AG'' : Agent .
- var W            : Float .
+ var W F          : Float .
  vars SO SO' SO'' : SetOpinion .
  var STEPS        : Nat .
  var COMM         : Nat .
@@ -143,8 +143,17 @@ fmod STATE is
  eq SO // SO' = minus(SO, SO', empty) .
  eq minus(SO, empty, SO'' ) = SO, SO'' .
  --- CAMBIO, aplicar info
- eq minus( (< AG : I >, SO), ( < AG :  I' >, SO'), SO'') = 
-    minus( SO , SO', ( < AG :  I' > , SO'')) .
+ eq minus((< AG : I >, SO), ( < AG :  I' >, SO'), SO'') = 
+    minus(SO , SO', ( < AG :  I' > , SO'')) .
+
+--- NUEVO
+ op _//_ : SetEdge SetEdge -> SetEdge .
+ op minus : SetEdge SetEdge SetEdge -> SetEdge .
+
+ eq SE // SE' = minus(SE, SE', empty) .
+ eq minus(SE, empty, SE') = SE, SE' .
+ eq minus((< ( AG , AG' ) : F >, SE), (< ( AG , AG' ) :  W >, SE'), EDGES) = 
+    minus(SE , SE', ( < ( AG , AG' ) :  W >, EDGES)) .
 
  --- Checking consensus 
  op consensus : State      -> Bool .
@@ -189,6 +198,12 @@ fmod STRATEGY is
 
  --- To be defined by the user
  op update : State SetEdge Agent -> Info .       --- CAMBIO, usar info
+
+ --- NUEVO
+ op strategyEdges : SetEdge State -> SetSetEdge .
+
+ --- NUEVO
+ op updateEdge : State Edge -> Float .
 
  --- Returning the distance between the lowest and the highest belif
  op bdistance : State SetEdge -> Float .

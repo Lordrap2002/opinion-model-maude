@@ -7,14 +7,19 @@ mod DEFINITION is
     subsort Float < Info .
     subsort Nat < Agent .
 
-    var AG          : Agent .
+    vars AG AG'     : Agent .
     var F           : Float .
     var SN          : SetOpinion .
     vars SE EDGES   : SetEdge .
     vars STEPS COMM : Nat .
+    var STATE       : State .
     
     eq opinion(AG, < nodes: (< AG : F >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
     eq opinion(F) = F .
+
+    eq strategyEdges(SE, STATE) = SE .
+
+    eq updateEdge(STATE, < (AG , AG') : F >) = F / 2.0 .
 endm
 
 mod DEGROOT is
