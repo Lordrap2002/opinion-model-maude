@@ -27,7 +27,6 @@ mod TRANSITION-SYSTEM is
  var STATE   : State .
  var AG AG'  : Agent .               --- NUEVO
  var F F'    : Float .               --- NUEVO
- var ED      : Edge .                --- NUEVO
 
  --- -------------------------------
 
@@ -38,7 +37,7 @@ mod TRANSITION-SYSTEM is
      if BELIEF' := update(STATE, EDGES, AGENT) [nonexec] .
 
  crl [atomicE] : < ( AG , AG' ) : F >  =>  < ( AG , AG' ) : F' >
-     if F' := updateEdge(STATE, ED) [nonexec] .
+     if F' := updateEdge(STATE, < ( AG , AG' ) : F >) [nonexec] .
 endm
 
 
@@ -120,7 +119,7 @@ mod REW-RELATION is
 
  eq stepE(M, STATE, empty, SETEDGE, EDGES) =  < nodes: nodes(STATE) ; edges: (edges(STATE) // SETEDGE) > 
                                         in step: (steps(STATE) + 1) 
-                                        comm: comm(STATE) strat: EDGES [print "edges " SETEDGE] .
+                                        comm: comm(STATE) strat: EDGES .
  eq stepE(M, STATE, (EDGE, SETEDGE), E, EDGES) = 
     stepE(M, STATE, SETEDGE, (E, nextE(M, EDGE, STATE)), EDGES) .
 
@@ -129,9 +128,8 @@ mod REW-RELATION is
   if  SUBS := 'AG:Agent    <- upTerm(AG) ;
               'AG':Agent   <- upTerm(AG') ;
               'F:Float     <- upTerm(F) ;
-              'STATE:State <- upTerm(< nodes: SO ; edges: (< (AG , AG') : F >, SE) > in step: STEPS comm: COMM strat: E) ; 
-              'ED:Edge     <- upTerm(< (AG , AG') : F >) /\ 
-      RES? := metaApply(M, upTerm(< (AG , AG') : F >), 'atomic, SUBS, 0) /\
+              'STATE:State <- upTerm(< nodes: SO ; edges: (< (AG , AG') : F >, SE) > in step: STEPS comm: COMM strat: E) /\ 
+      RES? := metaApply(M, upTerm(< (AG , AG') : F >), 'atomicE, SUBS, 0) /\
       EDGE   := if RES? == failure then errorE else downTerm(getTerm(RES?), errorE) fi .
 
 endm
