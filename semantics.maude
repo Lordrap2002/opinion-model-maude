@@ -92,7 +92,7 @@ mod REW-RELATION is
 
  eq step(M, STATE, empty, SO, EDGES) =  < nodes: ( nodes(STATE) // SO) ; edges: edges(STATE) > 
                                         in step: (steps(STATE) + 1) 
-                                        comm: (comm(STATE) + | non-self(EDGES) | ) strat: EDGES .
+                                        comm: (comm(STATE) + | non-self(EDGES) | ) strat: empty .
  eq step(M, STATE, (AG, SETAG), SO, EDGES) = 
     step(M, STATE, SETAG, (SO, next(M, AG, EDGES, STATE)), EDGES) .
 
@@ -120,7 +120,7 @@ mod REW-RELATION is
 
  eq stepE(M, STATE, empty, SETEDGE, EDGES) =  < nodes: nodes(STATE) ; edges: (edges(STATE) // SETEDGE) > 
                                         in step: (steps(STATE) + 1) 
-                                        comm: comm(STATE) strat: EDGES .
+                                        comm: comm(STATE) strat: EDGES [print "edges " SETEDGE] .
  eq stepE(M, STATE, (EDGE, SETEDGE), E, EDGES) = 
     stepE(M, STATE, SETEDGE, (E, nextE(M, EDGE, STATE)), EDGES) .
 
