@@ -2,7 +2,7 @@
  Analysis with Hybrid
 ***)
 
-load ex-vaccines1-2 .
+load ex-vaccines1-1soft .
 
 smod TEST is
     pr VACCINES .
