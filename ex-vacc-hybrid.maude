@@ -17,9 +17,9 @@ smod TEST is
 
     eq moduleName = 'TEST .
     eq update(STATE, SE, AG) = update-hybrid(STATE, SE, AG) .
-    ---eq strategy(SE, STATE) = hybrid(SE) .
+    eq strategy(SE, STATE) = hybrid(SE) .
     ---eq strategy(hybrid=(N) ,  SE, STATE)  = filter=(N,hybrid(SE)) .
-    eq strategy(SE, STATE) = filter=(5, hybrid(SE)) .
+    ---eq strategy(SE, STATE) = filter=(5, hybrid(SE)) .
     ---eq strategy(SE, STATE) = s1(SE, STATE) .
     
 ***(  

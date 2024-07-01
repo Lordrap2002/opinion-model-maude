@@ -127,10 +127,9 @@ mod HYBRID is
     -----------------------------------------------------------------
     --- Estrategia que busca si una capa entera y el centro se pueden
     --- acercar a un punto en el primer paso
-    vars AG' AG'' : Agent .
-    var SE' : SetEdge .
-    var SO : SetOpinion .
-    var F F' : Float .
+    vars AG'         : Agent .
+    var SO           : SetOpinion .
+    var F F'         : Float .
     vars SA SA' SA'' : SetAgent .
 
     op eccentricity : Agent SetEdge -> Float .
@@ -146,10 +145,19 @@ mod HYBRID is
     eq eccentricities((< AG : F >, SO), SE) = (< AG : eccentricity(AG, SE)>, eccentricities(SO, SE)) .
     eq eccentricities(empty, SE) = empty .
 
-    op center : SetOpinion SetEdge -> Opinion .
-    op center : SetOpinion Opinion -> Opinion .
+    op center : SetOpinion SetEdge -> Agent .
+    op center : SetOpinion Opinion -> Agent .
     eq center(SO, SE) = center(eccentricities(SO, SE), < 40 : 10000.0 >) .
     eq center((< AG : F >, SO), < AG' : F' >) = if F < F' then center(SO, (< AG : F >)) 
                                                 else center(SO, (< AG' : F' >)) fi .
-    eq center(empty, (< AG : F >)) = < AG : F > .
+    eq center(empty, (< AG : F >)) = AG .
+
+    op layer : Agent Nat SetEdge -> SetAgent .
+    op layer : SetAgent Nat SetEdge SetAgent SetAgent -> SetAgent .
+    eq layer(AG, N, SE) = layer((AG), N, SE, empty, (AG)) .
+    eq layer(SA, 0, SE, SA', SA'') = SA'' .
+    eq layer((AG, SA), N, (< (AG , AG') : F' >, SE), SA', SA'') =
+        layer((AG, SA), N, SE, (SA', AG'), SA'') .
+    eq layer(SA, N, SE, SA', SA'') =
+        layer((SA, SA'), N - 1, SE, empty, SA' \ SA) .
 endm
