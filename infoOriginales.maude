@@ -125,23 +125,31 @@ mod HYBRID is
     op update-hybrid : State SetEdge Agent -> Float .
     eq update-hybrid(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
     -----------------------------------------------------------------
-    var AG' AG''    : Agent .
-    var F F' F''    : Float .
-    var SO          : SetOpinion .
-    vars STEPS COMM : Nat .
-    var E'          : SetSetEdge .
-    
-    op s1 : SetEdge State -> SetSetEdge .
-    op s1 : SetEdge Agent -> SetSetEdge .
-    eq s1(SE, STATE) = s1(SE, distant1(nodes(STATE), mean(STATE, incidents(SE)))) .
-    eq s1((< (AG', AG) : F >, SE), AG) = < (AG', AG) : F > , s1(SE, AG) .
-    eq s1((< (AG', AG'') : F >, SE), AG) = s1(SE, AG) .
-    eq s1(empty, AG) = empty .
+    --- Estrategia que busca si una capa entera y el centro se pueden
+    --- acercar a un punto en el primer paso
+    vars AG' AG'' : Agent .
+    var SE' : SetEdge .
+    var SO : SetOpinion .
+    var F F' : Float .
+    vars SA SA' SA'' : SetAgent .
 
-    op distant1 : SetOpinion Float -> Agent .
-    op distant1 : SetOpinion Float Float Agent -> Agent .
-    eq distant1((< AG : F' >, SO), F) = distant1(SO, F, F', AG) .
-    ceq distant1((< AG : F'' >, SO), F, F', AG') = distant1(SO, F, F'', AG) if abs(F - F') < abs(F - F'') .
-    ceq distant1((< AG : F'' >, SO), F, F', AG') = distant1(SO, F, F', AG') if abs(F - F') >= abs(F - F'') .
-    eq distant1(empty, F, F', AG) = AG .
+    op eccentricity : Agent SetEdge -> Float .
+    op eccentricity : SetAgent SetEdge SetAgent SetAgent Float -> Float .
+    eq eccentricity(AG, SE) = eccentricity((AG), SE, incidents(SE), (AG), 0.0) .
+    eq eccentricity(SA', SE, SA', SA, F) = F .
+    eq eccentricity((AG, SA), (< (AG , AG') : F' >, SE), SA', SA'', F) = 
+        eccentricity((AG, SA), SE, SA', (SA'', AG'), F) .
+    eq eccentricity(SA, SE, SA', SA'', F) =
+        eccentricity((SA, SA''), SE, SA', SA'', F + 1.0) .
+
+    op eccentricities : SetOpinion SetEdge -> SetOpinion .
+    eq eccentricities((< AG : F >, SO), SE) = (< AG : eccentricity(AG, SE)>, eccentricities(SO, SE)) .
+    eq eccentricities(empty, SE) = empty .
+
+    op center : SetOpinion SetEdge -> Opinion .
+    op center : SetOpinion Opinion -> Opinion .
+    eq center(SO, SE) = center(eccentricities(SO, SE), < 40 : 10000.0 >) .
+    eq center((< AG : F >, SO), < AG' : F' >) = if F < F' then center(SO, (< AG : F >)) 
+                                                else center(SO, (< AG' : F' >)) fi .
+    eq center(empty, (< AG : F >)) = < AG : F > .
 endm
