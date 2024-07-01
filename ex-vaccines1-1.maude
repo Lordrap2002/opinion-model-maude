@@ -35,3 +35,4 @@ endm
 --- rew step([moduleName], init, (< (1 , 0) : 0.65 >, < (2 , 3) : 0.0705 >, < (5 , 0) : 0.02 >, < (6 , 3) : 0.0242 >)) .
 --- search init =>* STATE such that strat(STATE) == (< (1 , 0) : 0.65 >, < (2 , 3) : 0.0705 >, < (5 , 0) : 0.02 >, < (6 , 3) : 0.0242 >) .
 --- search init =>* STATE such that strat(STATE) == (< (0 , 1) : 0.94 >, < (0 , 2) : 0.53 >, < (0 , 5) : 0.9 >, < (3 , 4) : 0.37 >, < (3 , 6) : 0.92 >) /\ steps(STATE) == 2 /\ consensus(STATE) .
+--- search init =>* STATE such that consensus(STATE) /\ steps(STATE) <= 2 /\ | strat(STATE) | <= 5 .

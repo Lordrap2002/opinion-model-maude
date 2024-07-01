@@ -149,8 +149,10 @@ fmod STATE is
  --- Checking consensus 
  op consensus : State      -> Bool .
  op consensus : SetOpinion -> Bool .
- eq consensus(< nodes: SO ; edges: SE > in step: STEPS comm: COMM strat: EDGES ) =
+ eq consensus(< nodes: SO ; edges: SE > in step: STEPS comm: COMM strat: EDGES) =
     consensus(SO) .
+ ceq consensus(< nodes: SO ; edges: SE > in step: STEPS comm: COMM strat: EDGES ) = false 
+     if | EDGES | <= 2 .
  --- CAMBIO, aplicar info
  ceq consensus(( < AG : I > ,  < AG' : I' > , SO)) = false 
      if abs(opinion(I) - opinion(I')) > EPSILON .
