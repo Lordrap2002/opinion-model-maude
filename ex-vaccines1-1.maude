@@ -19,7 +19,7 @@ mod VACCINES is
     eq edges =  < (0 , 1) : 0.9478 >, < (0 , 5) : 0.9322 >,
                 < (1 , 0) : 0.6500 >, < (1 , 4) : 0.8154 >, < (1 , 5) : 0.4587 >,
                 < (2 , 3) : 0.0705 >,
-                < (3 , 2) : 0.3792 >, < (3 , 4) : 0.3792 >, < (3 , 6) : 0.9274 >,
+                < (3 , 2) : 0.3792 >, < (3 , 4) : 0.9413 >, < (3 , 6) : 0.9274 >,
                 < (4 , 0) : 0.1261 >, < (4 , 6) : 0.3672 >,
                 < (5 , 0) : 0.1727 >, < (5 , 1) : 0.3429 >, < (5 , 2) : 0.6859 >,
                 < (6 , 3) : 0.0242 > .
@@ -27,8 +27,11 @@ mod VACCINES is
 
     op init : -> State .
     eq init =  initnet  in step: 0 comm: 0 strat: empty .
+    eq centro = 0 .
 endm
 
+--- search init =>* STATE such that consensus(STATE) .
+--- search [, 2] in TEST : init =>* STATE such that consensus(STATE) = true .
 --- search init =>* STATE such that consensus(STATE) /\ steps(STATE) <= 2 .
 --- rew sum-W(0, (< (1 , 0) : 0.65 >, < (2 , 3) : 0.0705 >, < (5 , 0) : 0.02 >, < (6 , 3) : 0.242 >)) .
 --- rew update-hybrid(init, (< (1 , 0) : 0.65 >, < (2 , 3) : 0.0705 >, < (5 , 0) : 0.02 >, < (6 , 3) : 0.0242 >), 3) .

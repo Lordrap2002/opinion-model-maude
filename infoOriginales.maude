@@ -125,13 +125,13 @@ mod HYBRID is
     op update-hybrid : State SetEdge Agent -> Float .
     eq update-hybrid(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
     -----------------------------------------------------------------
-    --- Estrategia que busca si una capa entera y el centro se pueden
-    --- acercar a un punto en el primer paso
     vars AG'         : Agent .
     var SO           : SetOpinion .
     var F F'         : Float .
     vars SA SA' SA'' : SetAgent .
+    ---var SSA          : SetSetAgent .
 
+    --- Operación que devuelve la excentricidad de un nodo
     op eccentricity : Agent SetEdge -> Float .
     op eccentricity : SetAgent SetEdge SetAgent SetAgent Float -> Float .
     eq eccentricity(AG, SE) = eccentricity((AG), SE, incidents(SE), (AG), 0.0) .
@@ -141,17 +141,29 @@ mod HYBRID is
     eq eccentricity(SA, SE, SA', SA'', F) =
         eccentricity((SA, SA''), SE, SA', SA'', F + 1.0) .
 
+    --- Operación que devuelve las excentricidades de los nodos de un grafo
     op eccentricities : SetOpinion SetEdge -> SetOpinion .
     eq eccentricities((< AG : F >, SO), SE) = (< AG : eccentricity(AG, SE)>, eccentricities(SO, SE)) .
     eq eccentricities(empty, SE) = empty .
 
-    op center : SetOpinion SetEdge -> Agent .
-    op center : SetOpinion Opinion -> Agent .
-    eq center(SO, SE) = center(eccentricities(SO, SE), < 40 : 10000.0 >) .
-    eq center((< AG : F >, SO), < AG' : F' >) = if F < F' then center(SO, (< AG : F >)) 
-                                                else center(SO, (< AG' : F' >)) fi .
-    eq center(empty, (< AG : F >)) = AG .
+    --- Operación que devuelve el/un nodo central de un grafo
+    op center : SetOpinion SetEdge -> Agent [memo] .
+    eq center(SO, SE) = centro .
+    ---op center : SetOpinion Opinion -> Agent .
+    ---eq center(SO, SE) = center(eccentricities(SO, SE), < 40 : 10000.0 >) .
+    ---eq center((< AG : F >, SO), < AG' : F' >) =
+    ---    if F < F' then center(SO, (< AG : F >)) 
+    ---    else center(SO, (< AG' : F' >)) fi .
+    ---eq center(empty, (< AG : F >)) = AG .
 
+    --- Operación que devuelve el/un nodo central de un grafo con su valor
+    op center2 : SetOpinion SetEdge -> Opinion [memo] .
+    op center2 : SetOpinion Agent -> Opinion [memo] .
+    eq center2(SO, SE) = center2(SO, centro) .
+    eq center2((< AG : F >, SO), AG) = < AG : F > .
+    ---eq center2(SO, SE) = center2(SO, center(SO, SE)) .
+
+    --- Operación que dado un nodo y una capa devuelve los nodos que pertenecen a esa capa 
     op layer : Agent Nat SetEdge -> SetAgent .
     op layer : SetAgent Nat SetEdge SetAgent SetAgent -> SetAgent .
     eq layer(AG, N, SE) = layer((AG), N, SE, empty, (AG)) .
@@ -160,4 +172,51 @@ mod HYBRID is
         layer((AG, SA), N, SE, (SA', AG'), SA'') .
     eq layer(SA, N, SE, SA', SA'') =
         layer((SA, SA'), N - 1, SE, empty, SA' \ SA) .
+    
+    --- Operación que devuelve las aristas que afectan a un centro y a los nodos de una de sus capas
+    op edgesCenterLayer : SetEdge State Nat -> SetEdge [memo] .
+    op edgesCenterLayer : SetEdge SetAgent Nat -> SetEdge [memo] .
+    eq edgesCenterLayer(SE, STATE, N) = edgesCenterLayer(SE, center(nodes(STATE), SE), N) .
+    ---eq edgesCenterLayer(SE, STATE, N) = edgesCenterLayer(SE, centro, N) .
+    eq edgesCenterLayer(SE, (AG, SA), N) = edgesByAgents(SE, (AG, layer(AG, N, SE))) .
+
+    --- Operación que dado un nodo devuelve los nodos que ya están en consenso con él
+    op nearbyAgents : Opinion SetOpinion -> SetAgent [memo] .
+    eq nearbyAgents(< AG : F >, (< AG' : F' >, SO)) =
+        if abs(F - F') < EPSILON then (AG', nearbyAgents(< AG : F >, SO))
+        else (nearbyAgents(< AG : F >, SO)) fi .
+    eq nearbyAgents(< AG : F >, empty) = empty .
+
+    --- Operación que dado un conjunto de nodos y de aristas devuelve las aristas que
+    --- afectan a esos nodos.
+    op edgesByAgents : SetEdge SetAgent -> SetEdge [memo] .
+    eq edgesByAgents((< (AG' , AG) : F >, SE), (AG, SA)) =
+        (< (AG' , AG) : F >, edgesByAgents(SE, (AG, SA))) .
+    eq edgesByAgents(SE, (AG, SA)) = edgesByAgents(SE, SA) .
+    eq edgesByAgents(SE, empty) = empty .
+    
+    --- Estrategia que busca si una capa entera y el centro se pueden
+    --- acercar a un punto en el primer paso
+    op s1 : SetEdge State -> SetEdge [memo] .
+    eq s1(SE, STATE) =
+        if steps(STATE) == 0 then hybrid(edgesCenterLayer(SE, STATE, capa))
+        else hybrid(SE \ edgesByAgents(SE, nearbyAgents(center2(nodes(STATE), SE), nodes(STATE)))) fi .
+
+    op centro : -> Agent .
+    op capa : -> Nat .
+    eq capa = 3 .
+
 endm
+
+    ---op centros : -> SetAgent .
+    ---sort SetSetAgent .
+    ---subsort NeSetAgent < SetSetAgent .
+    ---op mta : -> SetSetAgent [ctor] .
+    ---op _;_ : SetSetAgent SetSetAgent -> SetSetAgent [ctor assoc comm id: mta] .
+
+    ---op getCenter  : SetAgent            -> SetSetAgent [memo] .
+    ---op $getCenter : SetAgent SetSetAgent -> SetSetAgent .
+
+    ---eq getCenter(SA) = $getCenter(SA, mta) .
+    ---eq $getCenter(empty, SSA) = SSA .
+    ---eq $getCenter((AG, SA), SSA) = $getCenter(SA, (SSA ; AG)) .

@@ -122,8 +122,17 @@ def verificar2():
         if not c:
             print("si")
 
-verificar1()
+#verificar1()
 #verificar2()
+            
+import subprocess
+import re
+import sys
+import time
 
+def prueba():
+    process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"], stdin=subprocess.PIPE)
+    command = f"search init =>* STATE such that consensus(STATE) .\n"
+    process.communicate(command.encode())
 
-#search [3] init =>* STATE such that consensus(STATE) .
+prueba()
