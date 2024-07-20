@@ -134,8 +134,20 @@ def prueba():
     buenas = 0
     for i in range(iter):
         nodos = "< nodes:"
+        o = []
         for x in range(6):
-            nodos += f" < {str(x)} : {str(r.random())} >"
+            a = r.random()
+            f = 1
+            while f:
+                f = 0
+                for y in o:
+                    if abs(y - a) < 0.01:
+                        a = r.random()
+                        f = 1
+                        break
+            o.append(a)
+        for x in range(6):
+            nodos += f" < {str(x)} : {str(o[x])} >"
             if x != 5:
                 nodos += ","
         aristas = " ; edges:"
@@ -156,7 +168,12 @@ def prueba():
         if not "No solution" in output:
             print(output)
             buenas += 1
-        print(i)
+        if not i % 100:
+            print(i)
     print("Buenas: %d, Porcentaje: %f" % (buenas, buenas / iter))
 
 prueba()
+
+"""
+
+"""

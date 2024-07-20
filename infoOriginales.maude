@@ -125,6 +125,7 @@ mod HYBRID is
     op update-hybrid : State SetEdge Agent -> Float .
     eq update-hybrid(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
     -----------------------------------------------------------------
+    --- Estrategia s1 - Atraer al centro una capa
     vars AG'         : Agent .
     var SO           : SetOpinion .
     var F F'         : Float .
@@ -204,7 +205,56 @@ mod HYBRID is
 
     op centro : -> Agent .
     op capa : -> Nat .
+    -----------------------------------------------------------------
+    --- Estrategia s2 - Intentar acercar los nodos de mayor incidencia
+    var SO'     : SetOpinion .
 
+    --- Operación que calcula la cantidad de aristas que salen de cada nodo
+    op numEdgByNodes : SetEdge -> SetOpinion [memo] .
+    op numEdgByNodes : SetEdge SetOpinion -> SetOpinion [memo] .
+    eq numEdgByNodes(SE) = numEdgByNodes(SE, empty) .
+    eq numEdgByNodes(empty, SO) = SO .
+    eq numEdgByNodes((< (AG , AG') : F' >, SE), (< AG : F >, SO)) = numEdgByNodes(SE, (< AG : (F + 1.0) >, SO)) .
+    eq numEdgByNodes((< (AG , AG') : F >, SE), SO) = numEdgByNodes(SE, (< AG : 1.0 >, SO)) .
+
+    --- Operación que devuelve el grafo con mayor cantidad de aristas .
+    op mostConnNode : SetOpinion -> Agent [memo] .
+    op mostConnNode : SetOpinion Opinion -> Agent [memo] .
+    eq mostConnNode(SO) = mostConnNode(SO, < 40 : -1.0 >) .
+    eq mostConnNode((< AG : F >, SO), < AG' : F' >) =
+        if F > F' then mostConnNode(SO, (< AG : F >)) 
+        else mostConnNode(SO, (< AG' : F' >)) fi .
+    eq mostConnNode(empty, (< AG : F >)) = AG .
+
+    op mostConnNode2 : SetOpinion SetOpinion -> Opinion [memo] .
+    op mostConnNode2 : SetOpinion Agent -> Opinion [memo] .
+    eq mostConnNode2(SO, SO') = mostConnNode2(SO, mostConnNode(SO')) .
+    eq mostConnNode2((< AG : F >, SO), AG) = < AG : F > .
+
+    --- Operación que devuelve los nodos con mayor cantidad de aristas que conectan todo el grafo
+    op maxNodes : SetEdge -> SetAgent [memo] .
+    op maxNodes : SetEdge SetAgent -> SetAgent [memo] .
+    eq maxNodes(SE) = maxNodes(SE, empty) .
+    eq maxNodes(empty, SA) = SA .
+    eq maxNodes(SE, SA) = maxNodes(
+        (SE \ edgesByAgents(SE, (mostConnNode(numEdgByNodes(SE)), 
+            layer(mostConnNode(numEdgByNodes(SE)), 1, SE)))), 
+        (SA, mostConnNode(numEdgByNodes(SE)))) .
+
+    --- Operación que devuelve las aristas mínimas para conectar los nodos que no fueron
+    --- seleccionados en la operación maxNodes
+    op edgeByAgents : SetEdge -> SetEdge .
+    op edgeByAgents : SetEdge SetAgent SetAgent -> SetEdge .
+    eq edgeByAgents(SE) = edgeByAgents(SE, maxNodes(SE), incidents(SE \ edgesByAgents(SE, maxNodes(SE)))) .
+    eq edgeByAgents((< (AG , AG') : F >, SE), (AG, SA), (AG', SA')) = 
+        (< (AG , AG') : F >, edgeByAgents(SE, (AG, SA), SA')) .
+    eq edgeByAgents(SE, SA, empty) = empty .
+
+
+    op s2 : SetEdge State -> SetEdge [memo] .
+    eq s2(SE, STATE) =
+        if steps(STATE) == 0 then hybrid(edgesByAgents(SE, maxNodes(SE)))
+        else edgeByAgents(SE) fi .
 endm
 
     ---op centros : -> SetAgent .
