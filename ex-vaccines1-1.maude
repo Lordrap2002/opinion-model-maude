@@ -8,7 +8,7 @@ mod VACCINES is
     pr DEGROOT .
     pr GOSSIP .
     pr HYBRID .
-    eq EPSILON = 0.01 .
+    eq EPSILON = 0.001 .
 
     op nodes   : -> SetOpinion .
     op edges   : -> SetEdge .
@@ -26,8 +26,9 @@ mod VACCINES is
     eq initnet =  < nodes: nodes ; edges: edges >  .
 
     op init : -> State .
-    eq init =  initnet  in step: 0 comm: 0 strat: empty .
+    eq init =  initnet in step: 0 comm: 0 strat: empty .
     eq centro = 0 .
+    eq capa = 3 .
 endm
 
 --- search init =>* STATE such that consensus(STATE) .

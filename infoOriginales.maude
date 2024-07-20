@@ -204,7 +204,6 @@ mod HYBRID is
 
     op centro : -> Agent .
     op capa : -> Nat .
-    eq capa = 3 .
 
 endm
 

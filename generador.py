@@ -126,13 +126,37 @@ def verificar2():
 #verificar2()
             
 import subprocess
-import re
-import sys
 import time
 
 def prueba():
-    process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"], stdin=subprocess.PIPE)
-    command = f"search init =>* STATE such that consensus(STATE) .\n"
-    process.communicate(command.encode())
+    r.seed(time.time())
+    iter = 1000
+    buenas = 0
+    for i in range(iter):
+        nodos = "< nodes:"
+        for x in range(6):
+            nodos += f" < {str(x)} : {str(r.random())} >"
+            if x != 5:
+                nodos += ","
+        aristas = " ; edges:"
+        lados = [(0, 1), (0, 3), (1, 2), (1, 4), (2, 3), (2, 5),
+                (3, 0), (3, 4), (4, 1), (4, 5), (5, 0), (5, 2)]
+        for (x, y) in lados:
+            aristas += f" < ( {str(x)} , {str(y)} ) : {str(r.random())} >"
+            if x != 5 or y != 2:
+                aristas += ","
+        final = "in step: 0 comm: 0 strat: empty"
+        grafo = nodos + aristas + " > " + final
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        command = "search [, 2] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        output, error = process.communicate(command.encode())
+        output = output.decode()
+        if not "No solution" in output:
+            print(output)
+            buenas += 1
+        print(i)
+    print("Buenas: %d, Porcentaje: %f" % (buenas, buenas / iter))
 
 prueba()
