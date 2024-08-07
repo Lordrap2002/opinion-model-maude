@@ -248,7 +248,8 @@ mod HYBRID is
         (< (AG , AG') : F >, edgeByAgents(SE, (AG, SA), SA')) .
     eq edgeByAgents(SE, SA, empty) = empty .
 
-    --- Estrategia s2 - Intentar acercar los nodos de mayor adyacencia
+    --- Estrategia que intenta acercar los nodos de mayor adyacencia en un solo paso
+    --- y luego traer a todos los demás nodos en otro paso
     op s2 : SetEdge State -> SetEdge [memo] .
     eq s2(SE, STATE) =
         if steps(STATE) == 0 then hybrid(edgesByAgents(SE, maxNodes(SE)))
@@ -304,7 +305,8 @@ mod HYBRID is
     eq opinions((< AG : F >, SO), (AG, SA)) = (< AG : F >, opinions(SO, SA)) .
     eq opinions((< AG : F >, SO), empty) = empty .
 
-    --- Estrategia s3 - 
+    --- Estrategia  que intenta acercar los N nodos de mayor adyacencia en un solo paso
+    --- y luego traer los demás nodos por capas
     op s3 : SetEdge State -> SetEdge [memo] .
     eq s3(SE, STATE) =
         if steps(STATE) == 0 then hybrid(edgesByAgents(SE, NmaxNodes(SE, nodos)))
@@ -312,6 +314,54 @@ mod HYBRID is
 
     op nodos : -> Nat .
     eq nodos = 3 .
+    -----------------------------------------------------------------
+    vars H G MA MI  : Float . 
+
+    --- Operación que recibe un conjunto de opiniones y devuelve
+    --- la opinión promedio entre ellas
+    op meanOpi : SetOpinion -> Float .
+    op meanOpi : SetOpinion Float Float -> Float .
+    eq meanOpi(SO) = meanOpi(SO, 0.0, 0.0) . 
+    eq meanOpi((< AG : F >, SO), H, F') = meanOpi(SO, H + 1.0, F' + F) .
+    eq meanOpi(empty, H, F) = F / H .
+
+    op maxOpi : SetOpinion -> Float .
+    op maxOpi : SetOpinion Float -> Float .
+    eq maxOpi(SO) = maxOpi(SO, 0.0) . 
+    ceq maxOpi((< AG : F >, SO), H) = maxOpi(SO, F) if F > H  .
+    eq maxOpi((< AG : F >, SO), H) = maxOpi(SO, H) .
+    eq maxOpi(empty, H) = H .
+
+    op minOpi : SetOpinion -> Float .
+    op minOpi : SetOpinion Float -> Float .
+    eq minOpi(SO) = minOpi(SO, 1.0) . 
+    ceq minOpi((< AG : F >, SO), H) = minOpi(SO, F) if F < H .
+    eq minOpi((< AG : F >, SO), H) = minOpi(SO, H) .
+    eq minOpi(empty, H) = H . 
+
+    --- Operación que devuelve las aristas que acercan los nodos seleccionados
+    --- en la operación NmaxNodes a la opinión promedio entre ellos
+    op meanEdges : SetOpinion SetEdge SetOpinion -> SetEdge .
+    op meanEdges : SetOpinion SetEdge SetOpinion Float Float Float -> SetEdge .
+    eq meanEdges(SO', SE, SO) = meanEdges(SO', SE, SO, meanOpi(SO), maxOpi(SO), minOpi(SO)) .
+    ceq meanEdges((< AG' : F' >, SO'), (< (AG' , AG) : H >, SE), (< AG : F >, SO), G, MA, MI) =
+        (< (AG' , AG) : H >, meanEdges((< AG' : F' >, SO'), SE, (< AG : F >, SO), G, MA, MI))
+        if F >= G /\ F' < F /\ F' > MI .
+    ceq meanEdges((< AG' : F' >, SO'), (< (AG' , AG) : H >, SE), (< AG : F >, SO), G, MA, MI) =
+        (< (AG' , AG) : H >, meanEdges((< AG' : F' >, SO'), SE, (< AG : F >, SO), G, MA, MI))
+        if F < G /\ F' > F /\ F' < MA .
+    eq meanEdges(SO', empty, SO, G, MA, MI) = empty .
+    eq meanEdges(SO', (< (AG' , AG) : H >, SE), SO, G, MA, MI) = meanEdges(SO', SE, SO, G, MA, MI) .
+
+    --- Estrategia  que intenta acercar los N nodos de mayor adyacencia en X pasos
+    --- y luego traer los demás nodos por capas
+    op s4 : SetEdge State -> SetEdge [memo] .
+    eq s4(SE, STATE) =
+        if steps(STATE) <= pasos then meanEdges(nodes(STATE), SE, opinions(nodes(STATE), NmaxNodes(SE, nodos)))
+        else verifyNConsensus(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
+    
+    op pasos : -> Nat .
+    eq pasos = 5 .
 endm
 
     ---op centros : -> SetAgent .
