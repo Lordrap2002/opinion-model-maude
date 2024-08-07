@@ -2,7 +2,7 @@
  Analysis with Hybrid
 ***)
 
-load ex-vaccines1-1 .
+load ex-vaccines1 .
 
 smod TEST is
     pr VACCINES .
@@ -20,8 +20,7 @@ smod TEST is
     ---eq strategy(SE, STATE) = hybrid(SE) .
     ---eq strategy(hybrid=(N) ,  SE, STATE)  = filter=(N,hybrid(SE)) .
     ---eq strategy(SE, STATE) = filter=(5, hybrid(SE)) .
-    ---eq strategy(SE, STATE) = s1(SE, STATE) .
-    eq strategy(SE, STATE) = s2(SE, STATE) .
+    eq strategy(SE, STATE) = s3(SE, STATE) .
     
 ***(  
     eq strategy(hybrid>=(N),  SE, STATE)  = filter>=(N,hybrid(SE)) .

@@ -125,7 +125,6 @@ mod HYBRID is
     op update-hybrid : State SetEdge Agent -> Float .
     eq update-hybrid(STATE, SE, AG) = update-degroot(STATE, SE, AG) .
     -----------------------------------------------------------------
-    --- Estrategia s1 - Atraer al centro una capa
     vars AG'         : Agent .
     var SO           : SetOpinion .
     var F F'         : Float .
@@ -165,8 +164,8 @@ mod HYBRID is
     ---eq center2(SO, SE) = center2(SO, center(SO, SE)) .
 
     --- Operación que dado un nodo y una capa devuelve los nodos que pertenecen a esa capa 
-    op layer : Agent Nat SetEdge -> SetAgent .
-    op layer : SetAgent Nat SetEdge SetAgent SetAgent -> SetAgent .
+    op layer : Agent Nat SetEdge -> SetAgent [memo] .
+    op layer : SetAgent Nat SetEdge SetAgent SetAgent -> SetAgent [memo] .
     eq layer(AG, N, SE) = layer((AG), N, SE, empty, (AG)) .
     eq layer(SA, 0, SE, SA', SA'') = SA'' .
     eq layer((AG, SA), N, (< (AG , AG') : F' >, SE), SA', SA'') =
@@ -206,7 +205,6 @@ mod HYBRID is
     op centro : -> Agent .
     op capa : -> Nat .
     -----------------------------------------------------------------
-    --- Estrategia s2 - Intentar acercar los nodos de mayor incidencia
     var SO'     : SetOpinion .
 
     --- Operación que calcula la cantidad de aristas que salen de cada nodo
@@ -250,11 +248,70 @@ mod HYBRID is
         (< (AG , AG') : F >, edgeByAgents(SE, (AG, SA), SA')) .
     eq edgeByAgents(SE, SA, empty) = empty .
 
-
+    --- Estrategia s2 - Intentar acercar los nodos de mayor adyacencia
     op s2 : SetEdge State -> SetEdge [memo] .
     eq s2(SE, STATE) =
         if steps(STATE) == 0 then hybrid(edgesByAgents(SE, maxNodes(SE)))
         else edgeByAgents(SE) fi .
+    -----------------------------------------------------------------
+    var SE'         : SetEdge .
+    var AG''        : Agent .
+
+    --- Operación que devuelve los N nodos con mayor cantidad de aristas que conectan todo el grafo
+    op NmaxNodes : SetEdge Nat -> SetAgent [memo] .
+    op NmaxNodes : SetEdge SetAgent Nat -> SetAgent [memo] .
+    eq NmaxNodes(SE, N) = NmaxNodes(SE, empty, N) .
+    eq NmaxNodes(empty, SA, N) = SA .
+    eq NmaxNodes(SE, SA, 0) = SA .
+    eq NmaxNodes(SE, SA, N) = NmaxNodes(
+        (SE \ edgesByAgents(SE, (mostConnNode(numEdgByNodes(SE)), 
+            layer(mostConnNode(numEdgByNodes(SE)), 1, SE)))), 
+        (SA, mostConnNode(numEdgByNodes(SE))), N - 1) .
+
+    --- Operación que dado un conjunto de nodos y una capa devuelve los nodos que
+    --- pertenecen a esa capa
+    op layer : SetAgent Nat SetEdge -> SetAgent [memo] .
+    eq layer((AG, SA), N, SE) = (layer(AG, N, SE), layer(SA, N, SE)) .
+    eq layer(empty, N, SE) = empty .
+
+    op mte : -> SetEdge [ctor] .
+
+    --- Operación que devuelve las aristas mínimas para conectar los nodos que no fueron
+    --- seleccionados en la operación NmaxNodes de una capa en especial
+    op edgeByAgentsLayer : SetEdge Nat -> SetEdge [memo] .
+    op edgeByAgentsLayer : SetEdge SetAgent Nat -> SetEdge [memo] .
+    op edgeByAgentsLayer : SetEdge SetAgent SetEdge -> SetEdge [memo] .
+    eq edgeByAgentsLayer(SE, N) = edgeByAgentsLayer(SE, NmaxNodes(SE, nodos), N - 1) .
+    eq edgeByAgentsLayer(SE, SA, 0) = edgeByAgentsLayer(SE, SA, mte) .
+    eq edgeByAgentsLayer(SE, SA, N) = 
+        edgeByAgentsLayer(SE, (SA, layer(NmaxNodes(SE, nodos), N, SE)), N - 1) .
+    eq edgeByAgentsLayer((< (AG , AG') : F >, SE), (AG, AG', SA), SE') = 
+        edgeByAgentsLayer(SE, (AG, AG', SA), SE') .
+    eq edgeByAgentsLayer((< (AG , AG') : F' >, SE), SA, (< (AG'' , AG') : F >, SE')) = 
+        edgeByAgentsLayer(SE, SA, (< (AG'' , AG') : F >, SE')) .
+    eq edgeByAgentsLayer((< (AG , AG') : F >, SE), (AG, SA), SE') = 
+        edgeByAgentsLayer(SE, (AG, SA), (< (AG , AG') : F >, SE')) .
+    eq edgeByAgentsLayer(SE, SA, SE') = SE' .
+
+    --- Operación que verifica si los nodos seleccionados en la operación NmaxNodes
+    --- están en consenso
+    op verifyNConsensus : SetEdge State Bool -> SetEdge .
+    eq verifyNConsensus(SE, STATE, true) = edgeByAgentsLayer(SE, steps(STATE)) .
+    eq verifyNConsensus(SE, STATE, false) = empty .
+
+    --- Operación que devuelve las opiniones de un conjunto de nodos
+    op opinions : SetOpinion SetAgent -> SetOpinion .
+    eq opinions((< AG : F >, SO), (AG, SA)) = (< AG : F >, opinions(SO, SA)) .
+    eq opinions((< AG : F >, SO), empty) = empty .
+
+    --- Estrategia s3 - 
+    op s3 : SetEdge State -> SetEdge [memo] .
+    eq s3(SE, STATE) =
+        if steps(STATE) == 0 then hybrid(edgesByAgents(SE, NmaxNodes(SE, nodos)))
+        else verifyNConsensus(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
+
+    op nodos : -> Nat .
+    eq nodos = 3 .
 endm
 
     ---op centros : -> SetAgent .

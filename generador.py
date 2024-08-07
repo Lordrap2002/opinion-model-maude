@@ -172,8 +172,88 @@ def prueba():
             print(i)
     print("Buenas: %d, Porcentaje: %f" % (buenas, buenas / iter))
 
-prueba()
+#prueba()
 
-"""
+from collections import deque
 
-"""
+def prueba2():
+    r.seed(time.time())
+    iter = 100
+    maxN = 20
+    buenas = 0
+    for i in range(iter):
+        malo = 1
+        nodos = []
+        while malo:
+            lados = []
+            lados2 = []
+            for x in range(maxN):
+                nodos.append(x)
+                for y in range(maxN):
+                    p = r.random()
+                    if p < 0.2:
+                        lados.append((x, y))
+                        lados2.append((y, x))
+            normal, invertido = 0, 0
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    normal += 1
+                    for (x, y) in lados:
+                        if x == n and vis[y]:
+                            q.append(y)
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    invertido += 1
+                    for (x, y) in lados2:
+                        if x == n and vis[y]:
+                            q.append(y)
+            if normal == maxN and invertido == maxN:
+                malo = 0
+        nodos = "< nodes:"
+        o = []
+        for x in range(maxN):
+            a = r.random()
+            f = 1
+            while f:
+                f = 0
+                for y in o:
+                    if abs(y - a) < 0.01:
+                        a = r.random()
+                        f = 1
+                        break
+            o.append(a)
+        for x in range(maxN):
+            nodos += f" < {str(x)} : {str(o[x])} >"
+            if x != maxN - 1:
+                nodos += ","
+        aristas = " ; edges:"
+        for (x, y) in lados:
+            aristas += f" < ( {str(x)} , {str(y)} ) : {str(r.random())} >"
+            if x != lados[-1][0] or y != lados[-1][1]:
+                aristas += ","
+        final = "in step: 0 comm: 0 strat: empty"
+        grafo = nodos + aristas + " > " + final
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        command = "search [, 2] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        output, error = process.communicate(command.encode())
+        output = output.decode()
+        #print(output)
+        if not "No solution" in output:
+            buenas += 1
+        if not i % 1:
+            print(i)
+    print("Buenas: %d, Porcentaje: %f" % (buenas, buenas / iter))
+
+prueba2()
