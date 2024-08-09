@@ -148,13 +148,13 @@ mod HYBRID is
 
     --- Operación que devuelve el/un nodo central de un grafo
     op center : SetOpinion SetEdge -> Agent [memo] .
-    eq center(SO, SE) = centro .
-    ---op center : SetOpinion Opinion -> Agent .
-    ---eq center(SO, SE) = center(eccentricities(SO, SE), < 40 : 10000.0 >) .
-    ---eq center((< AG : F >, SO), < AG' : F' >) =
-    ---    if F < F' then center(SO, (< AG : F >)) 
-    ---    else center(SO, (< AG' : F' >)) fi .
-    ---eq center(empty, (< AG : F >)) = AG .
+    ---eq center(SO, SE) = centro .
+    op center : SetOpinion Opinion -> Agent .
+    eq center(SO, SE) = center(eccentricities(SO, SE), < 1001 : 10000.0 >) .
+    eq center((< AG : F >, SO), < AG' : F' >) =
+        if F < F' then center(SO, (< AG : F >)) 
+        else center(SO, (< AG' : F' >)) fi .
+    eq center(empty, (< AG : F >)) = AG .
 
     --- Operación que devuelve el/un nodo central de un grafo con su valor
     op center2 : SetOpinion SetEdge -> Opinion [memo] .
@@ -194,6 +194,14 @@ mod HYBRID is
         (< (AG' , AG) : F >, edgesByAgents(SE, (AG, SA))) .
     eq edgesByAgents(SE, (AG, SA)) = edgesByAgents(SE, SA) .
     eq edgesByAgents(SE, empty) = empty .
+
+    --- Operación que dado un conjunto de nodos y de aristas devuelve las aristas que
+    --- salen de esos nodos.
+    op edgesByAgentsOut : SetEdge SetAgent -> SetEdge [memo] .
+    eq edgesByAgentsOut((< (AG , AG') : F >, SE), (AG, SA)) =
+        (< (AG , AG') : F >, edgesByAgentsOut(SE, (AG, SA))) .
+    eq edgesByAgentsOut(SE, (AG, SA)) = edgesByAgentsOut(SE, SA) .
+    eq edgesByAgentsOut(SE, empty) = empty .
     
     --- Estrategia que busca si una capa entera y el centro se pueden
     --- acercar a un punto en el primer paso
@@ -215,7 +223,7 @@ mod HYBRID is
     eq numEdgByNodes((< (AG , AG') : F' >, SE), (< AG : F >, SO)) = numEdgByNodes(SE, (< AG : (F + 1.0) >, SO)) .
     eq numEdgByNodes((< (AG , AG') : F >, SE), SO) = numEdgByNodes(SE, (< AG : 1.0 >, SO)) .
 
-    --- Operación que devuelve el grafo con mayor cantidad de aristas .
+    --- Operación que devuelve el nodo con mayor cantidad de aristas salientes
     op mostConnNode : SetOpinion -> Agent [memo] .
     op mostConnNode : SetOpinion Opinion -> Agent [memo] .
     eq mostConnNode(SO) = mostConnNode(SO, < 40 : -1.0 >) .
@@ -265,8 +273,9 @@ mod HYBRID is
     eq NmaxNodes(empty, SA, N) = SA .
     eq NmaxNodes(SE, SA, 0) = SA .
     eq NmaxNodes(SE, SA, N) = NmaxNodes(
-        (SE \ edgesByAgents(SE, (mostConnNode(numEdgByNodes(SE)), 
-            layer(mostConnNode(numEdgByNodes(SE)), 1, SE)))), 
+        (SE \ (edgesByAgents(SE, (mostConnNode(numEdgByNodes(SE)), 
+            layer(mostConnNode(numEdgByNodes(SE)), 1, SE))), 
+            edgesByAgentsOut(SE, layer(mostConnNode(numEdgByNodes(SE)), 1, SE)))), 
         (SA, mostConnNode(numEdgByNodes(SE))), N - 1) .
 
     --- Operación que dado un conjunto de nodos y una capa devuelve los nodos que
@@ -292,7 +301,7 @@ mod HYBRID is
         edgeByAgentsLayer(SE, SA, (< (AG'' , AG') : F >, SE')) .
     eq edgeByAgentsLayer((< (AG , AG') : F >, SE), (AG, SA), SE') = 
         edgeByAgentsLayer(SE, (AG, SA), (< (AG , AG') : F >, SE')) .
-    eq edgeByAgentsLayer(SE, SA, SE') = SE' .
+    eq edgeByAgentsLayer(SE, SA, (mte, SE')) = SE' .
 
     --- Operación que verifica si los nodos seleccionados en la operación NmaxNodes
     --- están en consenso
@@ -353,12 +362,18 @@ mod HYBRID is
     eq meanEdges(SO', empty, SO, G, MA, MI) = empty .
     eq meanEdges(SO', (< (AG' , AG) : H >, SE), SO, G, MA, MI) = meanEdges(SO', SE, SO, G, MA, MI) .
 
+    --- Operación que verifica si los nodos seleccionados en la operación NmaxNodes
+    --- están en consenso
+    op verifyNConsensusSteps : SetEdge State Bool -> SetEdge .
+    eq verifyNConsensusSteps(SE, STATE, true) = edgeByAgentsLayer(SE, steps(STATE) - pasos) .
+    eq verifyNConsensusSteps(SE, STATE, false) = empty .
+
     --- Estrategia  que intenta acercar los N nodos de mayor adyacencia en X pasos
     --- y luego traer los demás nodos por capas
     op s4 : SetEdge State -> SetEdge [memo] .
     eq s4(SE, STATE) =
         if steps(STATE) <= pasos then meanEdges(nodes(STATE), SE, opinions(nodes(STATE), NmaxNodes(SE, nodos)))
-        else verifyNConsensus(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
+        else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
     
     op pasos : -> Nat .
     eq pasos = 5 .
