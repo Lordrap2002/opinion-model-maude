@@ -258,7 +258,6 @@ def prueba2():
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\n"
-        #print(command)
         output, error = process.communicate(command.encode())
         output = output.decode() 
         if not "No solution" in output:
