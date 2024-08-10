@@ -181,7 +181,7 @@ def prueba2():
     iter = 1000
     maxN = 40
     buenas = 0
-    maxAdy = 10
+    maxAdy = 5
     N = []
     for i in range(maxN):
         N.append(i)
@@ -197,7 +197,7 @@ def prueba2():
                 adyacencia[x] = 0
                 for y in N:
                     p = r.random()
-                    if p < 0.5 and x != y:
+                    if p < 0.25 and x != y:
                         lados.append((x, y))
                         lados2.append((y, x))
                         adyacencia[x] += 1
@@ -257,7 +257,7 @@ def prueba2():
         process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        command = "search [, 30] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\n"
         #print(command)
         output, error = process.communicate(command.encode())
         output = output.decode() 
@@ -266,6 +266,6 @@ def prueba2():
             buenas += 1
         if not i % 10:
             print(i)
-    print("Buenas: %d, Porcentaje: %3.2f%" % (buenas, (buenas / iter) * 100))
+    print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
 prueba2()
