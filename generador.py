@@ -179,7 +179,7 @@ from collections import deque
 def prueba2():
     r.seed(time.time())
     iter = 1000
-    maxN = 40
+    maxN = 50
     buenas = 0
     maxAdy = 5
     N = []
