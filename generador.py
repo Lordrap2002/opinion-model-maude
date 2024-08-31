@@ -181,7 +181,6 @@ def prueba2():
     iter = 1000
     maxN = 50
     buenas = 0
-    maxAdy = 5
     N = []
     for i in range(maxN):
         N.append(i)
@@ -193,6 +192,7 @@ def prueba2():
             lados = []
             lados2 = []
             for x in range(maxN):
+                maxAdy = r.randint(2, 5)
                 nodos.append(x)
                 adyacencia[x] = 0
                 for y in N:
@@ -232,13 +232,14 @@ def prueba2():
                 malo = 0
         nodos = "< nodes:"
         o = []
+        w = []
         for x in range(maxN):
             a = r.random()
             f = 1
             while f:
                 f = 0
                 for y in o:
-                    if abs(y - a) < 0.01:
+                    if abs(y - a) < 0.005:
                         a = r.random()
                         f = 1
                         break
@@ -249,7 +250,9 @@ def prueba2():
                 nodos += ","
         aristas = " ; edges:"
         for (x, y) in lados:
-            aristas += f" < ( {str(x)} , {str(y)} ) : {str(r.random())} >"
+            val = r.random()
+            w.append((x, y, val))
+            aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
             if x != lados[-1][0] or y != lados[-1][1]:
                 aristas += ","
         final = "in step: 0 comm: 0 strat: empty"
@@ -262,7 +265,11 @@ def prueba2():
         output = output.decode()
         #print(command)
         if not "No solution" in output:
-            print(output)
+            #print(output)
+            #for x in range(maxN):
+                #print(f" < {str(x)} : {str(o[x])} >")
+            #print(w)
+            print(grafo)
             buenas += 1
         if not i % 10:
             print(i)
