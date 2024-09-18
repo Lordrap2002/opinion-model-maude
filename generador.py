@@ -1,5 +1,8 @@
 from sys import stdin
 import random as r
+import subprocess
+import time
+from collections import deque
 
 def nodes1():
     l = []
@@ -125,9 +128,6 @@ def verificar2():
 #verificar1()
 #verificar2()
 
-import subprocess
-import time
-
 def prueba():
     r.seed(time.time())
     iter = 1000
@@ -173,8 +173,6 @@ def prueba():
     print("Buenas: %d, Porcentaje: %f" % (buenas, buenas / iter))
 
 #prueba()
-
-from collections import deque
 
 def prueba2():
     r.seed(time.time())
@@ -275,4 +273,95 @@ def prueba2():
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
-prueba2()
+#No asegura nodos con diferente opinion
+def prueba3():
+    r.seed(time.time())
+    iter = 1000
+    maxN = 50
+    buenas = 0
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    for i in range(iter):
+        malo = 1
+        nodos = []
+        adyacencia = {}
+        while malo:
+            lados = []
+            lados2 = []
+            for x in range(maxN):
+                maxAdy = r.randint(10, 20)
+                nodos.append(x)
+                adyacencia[x] = 0
+                for y in N:
+                    p = r.random()
+                    if p < 0.25 and x != y:
+                        lados.append((x, y))
+                        lados2.append((y, x))
+                        adyacencia[x] += 1
+                    if adyacencia[x] == maxAdy:
+                        break
+                N.append(N[0])
+                N.pop(0)
+            normal, invertido = 0, 0
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    normal += 1
+                    for (x, y) in lados:
+                        if x == n and vis[y]:
+                            q.append(y)
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    invertido += 1
+                    for (x, y) in lados2:
+                        if x == n and vis[y]:
+                            q.append(y)
+            if normal == maxN and invertido == maxN:
+                malo = 0
+        nodos = "< nodes:"
+        o = []
+        w = []
+        for x in range(maxN):
+            a = r.random()
+            f = 1
+            o.append(a)
+        for x in range(maxN):
+            nodos += f" < {str(x)} : {str(o[x])} >"
+            if x != maxN - 1:
+                nodos += ","
+        aristas = " ; edges:"
+        for (x, y) in lados:
+            val = r.random()
+            w.append((x, y, val))
+            aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+            if x != lados[-1][0] or y != lados[-1][1]:
+                aristas += ","
+        final = "in step: 0 comm: 0 strat: empty"
+        grafo = nodos + aristas + " > " + final
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        output, error = process.communicate(command.encode())
+        output = output.decode()
+        if not "No solution" in output:
+            f = open("debug.txt", "a")
+            f.write(grafo + "\n")
+            f.close()
+            print("Buena")
+            buenas += 1
+        if not i % 10:
+            print(i)
+    print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
+
+prueba3()
