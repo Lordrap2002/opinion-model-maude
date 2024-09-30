@@ -2,7 +2,7 @@
  Analysis with I-E
 ***)
 
-load ex-vaccines2 .
+load grafo-I .
 
 mod TEST is
     pr VACCINES .

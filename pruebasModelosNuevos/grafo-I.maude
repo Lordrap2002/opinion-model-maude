@@ -2,7 +2,7 @@
  The example of vaccines 
 ***)
 
-load infoNuevos .
+load ../infoModelos/infoNuevos .
 
 mod VACCINES is
     pr MODEL-I-E .

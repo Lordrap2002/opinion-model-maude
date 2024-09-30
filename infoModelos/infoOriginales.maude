@@ -1,6 +1,6 @@
 ***( Archivo con la información de los modelos originales )
 
-load semantics .
+load ../base/semantics .
 
 mod DEFINITION is
     pr REW-RELATION .

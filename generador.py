@@ -368,7 +368,7 @@ def prueba3():
 #prueba3()
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
-
+#Guarda las diferencias de las opiniones extremas
 def prueba4():
     r.seed(time.time())
     iter = 3

@@ -1,7 +1,7 @@
 ***( Archivo con los modulos necesarios para las variantes
 del modelo 1 del texto de Daniel )
 
-load semantics .
+load ../base/semantics .
 
 fmod ITEM is
     pr STRING . 
