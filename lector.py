@@ -69,4 +69,19 @@ def limpiar():
             print("-------------------------------------------------------------------------------------\n")
         print("=====================================================================================\n")
 
-limpiar()
+#limpiar()
+
+def metricas():
+    promDif = 0
+    with open("log.txt", "r") as file:
+        n = 0
+        for linea in file:
+            x, y, z, w = list(map(float, linea.split()))
+            promDif += (y - x) - (w - z)
+            n += 1
+        promDif /= n
+    file = open("metricas.txt", "a")
+    file.write("%f\n" % (promDif))
+    file.close()
+
+metricas()

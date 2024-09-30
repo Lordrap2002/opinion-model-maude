@@ -371,7 +371,7 @@ patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 #Guarda las diferencias de las opiniones extremas
 def prueba4():
     r.seed(time.time())
-    iter = 3
+    iter = 1000
     maxN = 100
     buenas = 0
     N = []
@@ -446,7 +446,7 @@ def prueba4():
         process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\nshow path 40 .\n"
         output, error = process.communicate(command.encode())
         output = output.decode()
         if not "No solution" in output:
@@ -455,15 +455,9 @@ def prueba4():
             f.close()
             print("Buena")
             buenas += 1
-        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
-                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
-        command += "show path 40 .\n"
-        output, error = process.communicate(command.encode())
-        output = output.decode()
         output = output.split("state 40")[-1]
         dataNodos = re.findall(patronNodos, output)
-        opF = [round(float(y), 5) for x, y in dataNodos]
+        opF = [round(float(y), 6) for x, y in dataNodos]
         limI = [min(o), max(o)]
         limF = [min(opF), max(opF)]
         f = open("log.txt", "a")
