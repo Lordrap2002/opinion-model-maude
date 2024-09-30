@@ -277,7 +277,7 @@ def prueba2():
 def prueba3():
     r.seed(time.time())
     iter = 1000
-    maxN = 50
+    maxN = 100
     buenas = 0
     N = []
     for i in range(maxN):
@@ -290,7 +290,7 @@ def prueba3():
             lados = []
             lados2 = []
             for x in range(maxN):
-                maxAdy = r.randint(10, 20)
+                maxAdy = r.randint(2, 5)
                 nodos.append(x)
                 adyacencia[x] = 0
                 for y in N:
@@ -355,7 +355,7 @@ def prueba3():
         output, error = process.communicate(command.encode())
         output = output.decode()
         if not "No solution" in output:
-            f = open("debug.txt", "a")
+            f = open("debug3.txt", "a")
             f.write(grafo + "\n")
             f.close()
             print("Buena")

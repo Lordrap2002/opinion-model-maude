@@ -148,7 +148,6 @@ mod HYBRID is
 
     --- Operación que devuelve el/un nodo central de un grafo
     op center : SetOpinion SetEdge -> Agent [memo] .
-    ---eq center(SO, SE) = centro .
     op center : SetOpinion Opinion -> Agent .
     eq center(SO, SE) = center(eccentricities(SO, SE), < 1001 : 10000.0 >) .
     eq center((< AG : F >, SO), < AG' : F' >) =
@@ -159,9 +158,8 @@ mod HYBRID is
     --- Operación que devuelve el/un nodo central de un grafo con su valor
     op center2 : SetOpinion SetEdge -> Opinion [memo] .
     op center2 : SetOpinion Agent -> Opinion [memo] .
-    eq center2(SO, SE) = center2(SO, centro) .
+    eq center2(SO, SE) = center2(SO, center(SO, SE)) .
     eq center2((< AG : F >, SO), AG) = < AG : F > .
-    ---eq center2(SO, SE) = center2(SO, center(SO, SE)) .
 
     --- Operación que dado un nodo y una capa devuelve los nodos que pertenecen a esa capa 
     op layer : Agent Nat SetEdge -> SetAgent [memo] .
