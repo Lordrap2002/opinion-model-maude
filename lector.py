@@ -1,7 +1,6 @@
 from sys import stdin, stdout, stderr
 import re
 import subprocess
-import time
 
 patronEstado = r'state\s+(\d+)'
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'

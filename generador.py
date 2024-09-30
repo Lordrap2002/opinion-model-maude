@@ -3,6 +3,7 @@ import random as r
 import subprocess
 import time
 from collections import deque
+import re
 
 def nodes1():
     l = []
@@ -364,4 +365,112 @@ def prueba3():
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
-prueba3()
+#prueba3()
+
+patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
+
+def prueba4():
+    r.seed(time.time())
+    iter = 3
+    maxN = 100
+    buenas = 0
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    for i in range(iter):
+        malo = 1
+        nodos = []
+        adyacencia = {}
+        while malo:
+            lados = []
+            lados2 = []
+            for x in range(maxN):
+                maxAdy = r.randint(2, 5)
+                nodos.append(x)
+                adyacencia[x] = 0
+                for y in N:
+                    p = r.random()
+                    if p < 0.25 and x != y:
+                        lados.append((x, y))
+                        lados2.append((y, x))
+                        adyacencia[x] += 1
+                    if adyacencia[x] == maxAdy:
+                        break
+                N.append(N[0])
+                N.pop(0)
+            normal, invertido = 0, 0
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    normal += 1
+                    for (x, y) in lados:
+                        if x == n and vis[y]:
+                            q.append(y)
+            q = deque()
+            q.append(0)
+            vis = [1] * maxN
+            while(len(q)):
+                n = q.popleft()
+                if(vis[n]):
+                    vis[n] -= 1
+                    invertido += 1
+                    for (x, y) in lados2:
+                        if x == n and vis[y]:
+                            q.append(y)
+            if normal == maxN and invertido == maxN:
+                malo = 0
+        nodos = "< nodes:"
+        o = []
+        w = []
+        for x in range(maxN):
+            a = r.random()
+            f = 1
+            o.append(a)
+        for x in range(maxN):
+            nodos += f" < {str(x)} : {str(o[x])} >"
+            if x != maxN - 1:
+                nodos += ","
+        aristas = " ; edges:"
+        for (x, y) in lados:
+            val = r.random()
+            w.append((x, y, val))
+            aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+            if x != lados[-1][0] or y != lados[-1][1]:
+                aristas += ","
+        final = "in step: 0 comm: 0 strat: empty"
+        grafo = nodos + aristas + " > " + final
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\n"
+        output, error = process.communicate(command.encode())
+        output = output.decode()
+        if not "No solution" in output:
+            f = open("debug3.txt", "a")
+            f.write(grafo + "\n")
+            f.close()
+            print("Buena")
+            buenas += 1
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        command += "show path 40 .\n"
+        output, error = process.communicate(command.encode())
+        output = output.decode()
+        output = output.split("state 40")[-1]
+        dataNodos = re.findall(patronNodos, output)
+        opF = [round(float(y), 5) for x, y in dataNodos]
+        limI = [min(o), max(o)]
+        limF = [min(opF), max(opF)]
+        f = open("log.txt", "a")
+        f.write("%f %f %f %f\n" % (limI[0], limI[1], limF[0], limF[1]))
+        f.close()
+        if not i % 10:
+            print(i)
+    print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
+
+prueba4()

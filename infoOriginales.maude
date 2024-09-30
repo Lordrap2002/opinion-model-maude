@@ -376,16 +376,3 @@ mod HYBRID is
     op pasos : -> Nat .
     eq pasos = 5 .
 endm
-
-    ---op centros : -> SetAgent .
-    ---sort SetSetAgent .
-    ---subsort NeSetAgent < SetSetAgent .
-    ---op mta : -> SetSetAgent [ctor] .
-    ---op _;_ : SetSetAgent SetSetAgent -> SetSetAgent [ctor assoc comm id: mta] .
-
-    ---op getCenter  : SetAgent            -> SetSetAgent [memo] .
-    ---op $getCenter : SetAgent SetSetAgent -> SetSetAgent .
-
-    ---eq getCenter(SA) = $getCenter(SA, mta) .
-    ---eq $getCenter(empty, SSA) = SSA .
-    ---eq $getCenter((AG, SA), SSA) = $getCenter(SA, (SSA ; AG)) .
