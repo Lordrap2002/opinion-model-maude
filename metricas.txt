@@ -1,1 +1,5 @@
-0.819302
+1. Promedios Generador Prueba4 (1000 grafos, 100 nodos)
+Max-min  | Cambio diferencia
+0.172389 | 0.808500
+2. Promedios Generador Prueba4 (2000 grafos, 100 nodos)
+Max-min  | Cambio diferencia

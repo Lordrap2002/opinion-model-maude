@@ -10,7 +10,7 @@ patronStrat = r'<\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*:\s*([\d\.e\-\+]+)\s*>'
 patronRadio = r'\d+\.\d+'
 
 def limpiar():
-    file = open("debug3.txt", "r")
+    file = open("debug2.txt", "r")
     grafos = file.readlines()
     file.close()
     i = 1
@@ -49,8 +49,6 @@ def limpiar():
             t1, t2 = text.split("strat:")
             dataNodos = re.findall(patronNodos, t1)
             nodos = [(int(x), round(float(y), 3)) for x, y in dataNodos]
-            #dataAristas = re.findall(patronAristas, t1)
-            #aristas = [(int(x), int(y)) for x, y, z in dataAristas]
             info = re.search(patronStepComm, t1)
             step, comm = info.group(1), info.group(2)
             dataStrat = re.findall(patronStrat, t2)
@@ -69,19 +67,21 @@ def limpiar():
             print("-------------------------------------------------------------------------------------\n")
         print("=====================================================================================\n")
 
-#limpiar()
+limpiar()
 
 def metricas():
-    promDif = 0
-    with open("log.txt", "r") as file:
+    promDif, promCam = 0, 0
+    with open("log2.txt", "r") as file:
         n = 0
         for linea in file:
             x, y, z, w = list(map(float, linea.split()))
-            promDif += (y - x) - (w - z)
+            promCam += (y - x) - (w - z)
+            promDif += (w - z)
             n += 1
+        promCam /= n
         promDif /= n
     file = open("metricas.txt", "a")
-    file.write("%f\n" % (promDif))
+    file.write("%f | %f\n" % (promDif, promCam))
     file.close()
 
-metricas()
+#metricas()
