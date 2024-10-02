@@ -71,7 +71,7 @@ limpiar()
 
 def metricas():
     promDif, promCam = 0, 0
-    with open("log2.txt", "r") as file:
+    with open("log3.txt", "r") as file:
         n = 0
         for linea in file:
             x, y, z, w = list(map(float, linea.split()))

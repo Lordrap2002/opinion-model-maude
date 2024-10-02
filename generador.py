@@ -371,7 +371,7 @@ patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 #Guarda las diferencias de las opiniones extremas
 def prueba4():
     r.seed(time.time())
-    iter = 2000
+    iter = 1000
     maxN = 100
     buenas = 0
     N = []
@@ -446,11 +446,11 @@ def prueba4():
         process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        command = "search [, 40] " + grafo + " =>* STATE such that consensus(STATE) .\nshow path 40 .\n"
+        command = "search [, 10] " + grafo + " =>* STATE such that consensus(STATE) .\nshow path 40 .\n"
         output, error = process.communicate(command.encode())
         output = output.decode()
         if not "No solution" in output:
-            f = open("debug2.txt", "a")
+            f = open("debug3.txt", "a")
             f.write(grafo + "\n")
             f.close()
             print("Buena")
@@ -460,7 +460,7 @@ def prueba4():
         opF = [round(float(y), 6) for x, y in dataNodos]
         limI = [min(o), max(o)]
         limF = [min(opF), max(opF)]
-        f = open("log2.txt", "a")
+        f = open("log3.txt", "a")
         f.write("%f %f %f %f\n" % (limI[0], limI[1], limF[0], limF[1]))
         f.close()
         if not i % 10:
