@@ -71,13 +71,13 @@ def limpiar():
 
 def metricas():
     promDif, promCam, buenas = 0, 0, 0
-    with open("logS5-2.txt", "r") as file:
+    with open("logS5-4.txt", "r") as file:
         n = 0
         for linea in file:
             x, y, z, w = list(map(float, linea.split()))
             promCam += (y - x) - (w - z)
             promDif += (w - z)
-            if(promDif <= 0.005):
+            if(w - z <= 0.005):
                 buenas += 1
             n += 1
         promCam /= n
