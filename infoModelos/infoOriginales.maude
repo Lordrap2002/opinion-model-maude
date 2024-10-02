@@ -353,10 +353,10 @@ mod HYBRID is
     eq meanEdges(SO', SE, SO) = meanEdges(SO', SE, SO, meanOpi(SO), maxOpi(SO), minOpi(SO)) .
     ceq meanEdges((< AG' : F' >, SO'), (< (AG' , AG) : H >, SE), (< AG : F >, SO), G, MA, MI) =
         (< (AG' , AG) : H >, meanEdges((< AG' : F' >, SO'), SE, (< AG : F >, SO), G, MA, MI))
-        if F >= G /\ F' < F /\ F' > MI .
+        if F >= G /\ F' < F /\ F' >= MI .
     ceq meanEdges((< AG' : F' >, SO'), (< (AG' , AG) : H >, SE), (< AG : F >, SO), G, MA, MI) =
         (< (AG' , AG) : H >, meanEdges((< AG' : F' >, SO'), SE, (< AG : F >, SO), G, MA, MI))
-        if F < G /\ F' > F /\ F' < MA .
+        if F < G /\ F' > F /\ F' <= MA .
     eq meanEdges(SO', empty, SO, G, MA, MI) = empty .
     eq meanEdges(SO', (< (AG' , AG) : H >, SE), SO, G, MA, MI) = meanEdges(SO', SE, SO, G, MA, MI) .
 
@@ -371,9 +371,13 @@ mod HYBRID is
     op s4 : SetEdge State -> SetEdge [memo] .
     eq s4(SE, STATE) =
         if steps(STATE) <= pasos then meanEdges(nodes(STATE), SE, opinions(nodes(STATE), NmaxNodes(SE, nodos)))
-        else verifyNConsensusSteps(SE, STATE, true) fi .
-        ---else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
+        ---else verifyNConsensusSteps(SE, STATE, true) fi .
+        else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
     
     op pasos : -> Nat .
     eq pasos = 5 .
+    -----------------------------------------------------------------
+    --- Estrategia  que intenta acercar todos los nodos al promedio de sus opiniones
+    op s5 : SetEdge State -> SetEdge [memo] .
+    eq s5(SE, STATE) = meanEdges(nodes(STATE), SE, nodes(STATE)) .
 endm

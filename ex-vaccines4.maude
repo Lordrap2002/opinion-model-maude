@@ -29,4 +29,4 @@ mod VACCINES is
     eq init =  initnet in step: 0 comm: 0 strat: empty .
 endm
 
---- search [, 40] init =>* STATE such that consensus(STATE) .
+--- search [, 10] init =>* STATE such that consensus(STATE) .
