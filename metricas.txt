@@ -3,3 +3,7 @@ Max-min  | Cambio diferencia | Consenso (0.005)
 0.172389 | 0.808500          | 4
 0.187409 | 0.792966          | 8
 0.175909 | 0.804231          | 3
+2. Promedios Generador Prueba4 (300 grafos, 100 nodos) - Estrategia s5 (20 pasos)
+Max-min  | Cambio diferencia | Consenso (0.005)
+0.019122 | 0.961756          | 0
+0.017636 | 0.962556          | 0
