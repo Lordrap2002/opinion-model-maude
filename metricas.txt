@@ -1,15 +1,27 @@
-1. Promedios Generador Prueba4 (1000 grafos, 100 nodos) - Estrategia s4
-Max-min  | Cambio diferencia | Consenso (0.005)
-0.172389 | 0.808500          | 4
-0.187409 | 0.792966          | 8
-0.175909 | 0.804231          | 3
-2. Promedios Generador Prueba4 (300 grafos, 100 nodos) - Estrategia s5 (máx 20 pasos)
-Max-min  | Cambio diferencia | Consenso (0.005)
-0.019122 | 0.961756          | 0
-0.017636 | 0.962556          | 0
-3. Promedios Generador Prueba4 (600 grafos, 100 nodos) - Estrategia s5 (máx 10 pasos)
-Max-min  | Cambio diferencia | Consenso (0.005)
-0.144747 | 0.834542          | 0
-3. Promedios Generador Prueba4 (20 grafos, 100 nodos) - Estrategia s5 (máx 30 pasos)
-Max-min  | Cambio diferencia | Consenso (0.005)
-0.005116 | 0.976322          | 18
+1. Promedios Generador Prueba4 (100 nodos) - Estrategia s4
+-------------------------------------------------------------------------------------
+Grafos | Max-min | Cambio diferencia | Consenso (0.005)
+  1000 | 0.17238 |          0.808500 |                4
+  1000 | 0.18740 |          0.792966 |                8
+  1000 | 0.17590 |          0.804231 |                3
+-------------------------------------------------------------------------------------
+2. Promedios Generador Prueba4 (100 nodos) - Estrategia s5 (máx 20 pasos)
+-------------------------------------------------------------------------------------
+Grafos | Max-min | Cambio diferencia | Consenso (0.005)
+   300 | 0.01912 |          0.961756 |                0
+   300 | 0.01763 |          0.962556 |                0
+-------------------------------------------------------------------------------------
+3. Promedios Generador Prueba4 (100 nodos) - Estrategia s5 (máx 10 pasos)
+-------------------------------------------------------------------------------------
+Grafos | Max-min | Cambio diferencia | Consenso (0.005)
+   600 | 0.14474 |          0.834542 |                0
+-------------------------------------------------------------------------------------
+3. Promedios Generador Prueba4 (100 nodos) - Estrategia s5 (máx 30 pasos)
+-------------------------------------------------------------------------------------
+Grafos | Max-min | Cambio diferencia | Consenso (0.005)
+    20 | 0.00511 |          0.976322 |               18
+-------------------------------------------------------------------------------------
+4. Promedios Generador Prueba4 (5 grafos, 100 nodos) - Estrategia degroot
+-------------------------------------------------------------------------------------
+Grafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min)
+     5 | 0.00093 |           0.98572 |                5 |                  1.31
