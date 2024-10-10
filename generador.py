@@ -366,111 +366,120 @@ def prueba3():
     print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
 #prueba3()
+    
+def generarGrafo(maxN, minA, maxA):
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    malo = 1
+    nodos = []
+    adyacencia = {}
+    while malo:
+        lados = []
+        lados2 = []
+        for x in range(maxN):
+            maxAdy = r.randint(minA, maxA)
+            nodos.append(x)
+            adyacencia[x] = 0
+            for y in N:
+                p = r.random()
+                if p < 0.25 and x != y:
+                    lados.append((x, y))
+                    lados2.append((y, x))
+                    adyacencia[x] += 1
+                if adyacencia[x] == maxAdy:
+                    break
+            N.append(N[0])
+            N.pop(0)
+        normal, invertido = 0, 0
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                normal += 1
+                for (x, y) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                invertido += 1
+                for (x, y) in lados2:
+                    if x == n and vis[y]:
+                        q.append(y)
+        if normal == maxN and invertido == maxN:
+            malo = 0
+    nodos = "< nodes:"
+    o = []
+    w = []
+    for x in range(maxN):
+        a = r.random()
+        f = 1
+        o.append(a)
+    for x in range(maxN):
+        nodos += f" < {str(x)} : {str(o[x])} >"
+        if x != maxN - 1:
+            nodos += ","
+    aristas = " ; edges:"
+    for (x, y) in lados:
+        val = r.random()
+        w.append((x, y, val))
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+        if x != lados[-1][0] or y != lados[-1][1]:
+            aristas += ","
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o)
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 patronComm = r'comm:\s*(\d+)'
 #Guarda las metricas
-def prueba4():
+def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevos, datos):
     r.seed(time.time())
-    iter = 5
-    maxN = 100
     buenas = 0
-    pasos = "30"
-    N = []
-    for i in range(maxN):
-        N.append(i)
+    if(not nuevos):
+        file = open(datos, "r")
+        grafos = file.readlines()
+        file.close()
     for i in range(iter):
-        malo = 1
-        nodos = []
-        adyacencia = {}
-        while malo:
-            lados = []
-            lados2 = []
-            for x in range(maxN):
-                maxAdy = r.randint(2, 5)
-                nodos.append(x)
-                adyacencia[x] = 0
-                for y in N:
-                    p = r.random()
-                    if p < 0.25 and x != y:
-                        lados.append((x, y))
-                        lados2.append((y, x))
-                        adyacencia[x] += 1
-                    if adyacencia[x] == maxAdy:
-                        break
-                N.append(N[0])
-                N.pop(0)
-            normal, invertido = 0, 0
-            q = deque()
-            q.append(0)
-            vis = [1] * maxN
-            while(len(q)):
-                n = q.popleft()
-                if(vis[n]):
-                    vis[n] -= 1
-                    normal += 1
-                    for (x, y) in lados:
-                        if x == n and vis[y]:
-                            q.append(y)
-            q = deque()
-            q.append(0)
-            vis = [1] * maxN
-            while(len(q)):
-                n = q.popleft()
-                if(vis[n]):
-                    vis[n] -= 1
-                    invertido += 1
-                    for (x, y) in lados2:
-                        if x == n and vis[y]:
-                            q.append(y)
-            if normal == maxN and invertido == maxN:
-                malo = 0
-        nodos = "< nodes:"
-        o = []
-        w = []
-        for x in range(maxN):
-            a = r.random()
-            f = 1
-            o.append(a)
-        for x in range(maxN):
-            nodos += f" < {str(x)} : {str(o[x])} >"
-            if x != maxN - 1:
-                nodos += ","
-        aristas = " ; edges:"
-        for (x, y) in lados:
-            val = r.random()
-            w.append((x, y, val))
-            aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
-            if x != lados[-1][0] or y != lados[-1][1]:
-                aristas += ","
-        final = "in step: 0 comm: 0 strat: empty"
-        grafo = nodos + aristas + " > " + final
-        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
+        if(nuevos):
+            grafo, minO, maxO = generarGrafo(maxN, minA, maxA)
+        else:
+            grafo = grafos[i]
+            opiniones = [round(float(y), 6) for x, y in re.findall(patronNodos, grafo)]
+            minO, maxO = min(opiniones), max(opiniones)
+        process = subprocess.Popen(["maude.linux64", archivo],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        #
-        command = "search [, " + pasos + "] " + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
+        
+        command = "search " + ("[, " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
         tiempo = time.time()
         output, error = process.communicate(command.encode())
         tiempo = time.time() - tiempo
         output = output.decode()
         if not "No solution" in output:
-            f = open("debugS5-5.txt", "a")
+            f = open("debug" + nombre + ".txt", "a")
             f.write(grafo + "\n")
             f.close()
             print("Buena")
             buenas += 1
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
-        comm = int(re.search(patronComm, output).group(1))
         opF = [round(float(y), 6) for x, y in dataNodos]
-        limI = [min(o), max(o)]
+        limI = [minO, maxO]
         limF = [min(opF), max(opF)]
-        f = open("logS5-5.txt", "a")
+        comm = int(re.search(patronComm, output).group(1))
+        f = open("log" + nombre + ".txt", "a")
         f.write("%f %f %f %f %f %d\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm))
         f.close()
         if not i % 10:
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
-prueba4()
+experimentarEstrategia(100, 100, 2, 5, "ex-vacc-hybrid.maude", 30, "S5-6", 0, "debugDG-2.txt")
+#experimentarEstrategia(100, 100, 2, 5, "ex-vacc-dgroot.maude", 0, , "DG-2", 1, "")

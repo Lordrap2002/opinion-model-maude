@@ -371,11 +371,11 @@ mod HYBRID is
     op s4 : SetEdge State -> SetEdge [memo] .
     eq s4(SE, STATE) =
         if steps(STATE) <= pasos then meanEdges(nodes(STATE), SE, opinions(nodes(STATE), NmaxNodes(SE, nodos)))
-        ---else verifyNConsensusSteps(SE, STATE, true) fi .
-        else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
+        else verifyNConsensusSteps(SE, STATE, true) fi .
+        ---else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
     
     op pasos : -> Nat .
-    eq pasos = 5 .
+    eq pasos = 10 .
     -----------------------------------------------------------------
     --- Estrategia  que intenta acercar todos los nodos al promedio de sus opiniones
     op s5 : SetEdge State -> SetEdge [memo] .
