@@ -368,7 +368,8 @@ def prueba3():
 #prueba3()
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
-#Guarda las diferencias de las opiniones extremas
+patronComm = r'comm:\s*(\d+)'
+#Guarda las metricas
 def prueba4():
     r.seed(time.time())
     iter = 5
@@ -444,28 +445,29 @@ def prueba4():
                 aristas += ","
         final = "in step: 0 comm: 0 strat: empty"
         grafo = nodos + aristas + " > " + final
-        process = subprocess.Popen(["maude.linux64", "ex-vacc-dgroot.maude"],
+        process = subprocess.Popen(["maude.linux64", "ex-vacc-hybrid.maude"],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
-        #[, " + pasos + "]
-        command = "search  " + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
+        #
+        command = "search [, " + pasos + "] " + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
         tiempo = time.time()
         output, error = process.communicate(command.encode())
         tiempo = time.time() - tiempo
         output = output.decode()
         if not "No solution" in output:
-            f = open("debugDG-1.txt", "a")
+            f = open("debugS5-5.txt", "a")
             f.write(grafo + "\n")
             f.close()
             print("Buena")
             buenas += 1
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
+        comm = int(re.search(patronComm, output).group(1))
         opF = [round(float(y), 6) for x, y in dataNodos]
         limI = [min(o), max(o)]
         limF = [min(opF), max(opF)]
-        f = open("logDG-1.txt", "a")
-        f.write("%f %f %f %f %f\n" % (limI[0], limI[1], limF[0], limF[1], tiempo))
+        f = open("logS5-5.txt", "a")
+        f.write("%f %f %f %f %f %d\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm))
         f.close()
         if not i % 10:
             print(i)

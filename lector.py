@@ -70,21 +70,24 @@ def limpiar():
 #limpiar()
 
 def metricas():
-    n, promDif, promCam, buenas, promT = 0, 0, 0, 0, 0
-    with open("logDG-1.txt", "r") as file:
+    n, promDif, promCam, buenas, promT, promComm = 0, 0, 0, 0, 0, 0
+    with open("logS5-5.txt", "r") as file:
         for linea in file:
-            x, y, z, w, t = list(map(float, linea.split()))
+            x, y, z, w, t, c = list(map(float, linea.split()))
             promCam += (y - x) - (w - z)
             promDif += (w - z)
             if(w - z <= 0.005):
                 promT += t
+                promComm += c
                 buenas += 1
             n += 1
         promCam /= n
         promDif /= n
         promT /= (buenas * 60)
+        promComm /= buenas
     file = open("metricas.txt", "a")
-    file.write("%6d | %.5f | %17.5f | %16d | %21.2f\n" % (n, promDif, promCam, buenas, promT))
+    file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n-------------------------------------------------------------------------------------\nGrafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min) |  Com\n")
+    file.write("%6d | %.5f | %17.5f | %16d | %21.2f | %5d\n" % (n, promDif, promCam, buenas, promT, promComm))
     file.close()
 
 metricas()
