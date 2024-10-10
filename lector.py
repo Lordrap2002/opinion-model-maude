@@ -86,7 +86,7 @@ def metricas():
         promT /= (buenas * 60)
         promComm /= buenas
     file = open("metricas.txt", "a")
-    file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n---------------------------------------------------------------------------------------\nGrafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min) |  Com\n")
+    file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n---------------------------------------------------------------------------------------\nGrafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min) |  Com\n---------------------------------------------------------------------------------------\n")
     file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %5d\n" % (n, promDif, promCam, buenas, promT, promComm))
     file.close()
 
