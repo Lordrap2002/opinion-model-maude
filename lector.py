@@ -69,25 +69,32 @@ def limpiar():
 
 #limpiar()
 
-def metricas():
-    n, promDif, promCam, buenas, promT, promComm = 0, 0, 0, 0, 0, 0
-    with open("logS5-6.txt", "r") as file:
+def metricas(archivo):
+    n, promDif, promCam, buenas, promT, promComm, promSt, promOp = 0, 0, 0, 0, 0, 0, 0, 0
+    with open(archivo, "r") as file:
         for linea in file:
-            x, y, z, w, t, c = list(map(float, linea.split()))
+            x, y, z, w, t, c, p = list(map(float, linea.split()))
             promCam += (y - x) - (w - z)
             promDif += (w - z)
+            promSt += p
             if(w - z <= 0.005):
                 promT += t
                 promComm += c
+                promOp += z + w
                 buenas += 1
             n += 1
-        promCam /= n
+        promCam /= n 
         promDif /= n
         promT /= (buenas * 60)
         promComm /= buenas
+        promOp /= (buenas * 2)
+        promSt /= buenas
     file = open("metricas.txt", "a")
-    file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n---------------------------------------------------------------------------------------\nGrafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min) |  Com\n---------------------------------------------------------------------------------------\n")
-    file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %5d\n" % (n, promDif, promCam, buenas, promT, promComm))
+    #file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n")
+    #file.write("---------------------------------------------------------------------------------------------------------\n")
+    #file.write("Grafos | Max-min | Cambio diferencia | Conse nso (0.005) | Tiempo Consenso (min) |  Com  | Pasos | Opinión\n")
+    #file.write("---------------------------------------------------------------------------------------------------------\n")
+    file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %5d | %5d | %.5f\n" % (n, promDif, promCam, buenas, promT, promComm, promSt, promOp))
     file.close()
 
-metricas()
+metricas("logS5-7.txt")

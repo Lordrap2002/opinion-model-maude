@@ -438,6 +438,8 @@ def generarGrafo(maxN, minA, maxA):
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 patronComm = r'comm:\s*(\d+)'
+patronEstado = r'states:\s*(\d+)'
+
 #Guarda las metricas
 def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevos, datos):
     r.seed(time.time())
@@ -447,6 +449,7 @@ def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevo
         grafos = file.readlines()
         file.close()
     for i in range(iter):
+        estados = "0"
         if(nuevos):
             grafo, minO, maxO = generarGrafo(maxN, minA, maxA)
         else:
@@ -468,6 +471,7 @@ def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevo
             f.close()
             print("Buena")
             buenas += 1
+            estado = re.search(patronEstado, output).group(1)
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
         opF = [round(float(y), 6) for x, y in dataNodos]
@@ -475,11 +479,11 @@ def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevo
         limF = [min(opF), max(opF)]
         comm = int(re.search(patronComm, output).group(1))
         f = open("log" + nombre + ".txt", "a")
-        f.write("%f %f %f %f %f %d\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm))
+        f.write("%f %f %f %f %f %d %s\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, estado))
         f.close()
         if not i % 10:
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
 
-experimentarEstrategia(100, 100, 2, 5, "ex-vacc-hybrid.maude", 30, "S5-6", 0, "debugDG-2.txt")
-#experimentarEstrategia(100, 100, 2, 5, "ex-vacc-dgroot.maude", 0, , "DG-2", 1, "")
+experimentarEstrategia(100, 100, 2, 5, "ex-vacc-hybrid.maude", 30, "S5-7", 0, "debugDG-3.txt")
+#experimentarEstrategia(100, 100, 2, 5, "ex-vacc-dgroot.maude", 0, "DG-3", 1, "")
