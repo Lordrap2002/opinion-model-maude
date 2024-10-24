@@ -367,19 +367,17 @@ def prueba3():
 
 #prueba3()
     
-def generarGrafo(maxN, minA, maxA):
+def generarGrafo(maxN, minA, maxA, prom):
     N = []
     for i in range(maxN):
         N.append(i)
     malo = 1
-    nodos = []
     adyacencia = {}
     while malo:
         lados = []
         lados2 = []
         for x in range(maxN):
             maxAdy = r.randint(minA, maxA)
-            nodos.append(x)
             adyacencia[x] = 0
             for y in N:
                 p = r.random()
@@ -420,9 +418,7 @@ def generarGrafo(maxN, minA, maxA):
     o = []
     w = []
     for x in range(maxN):
-        a = r.random()
-        f = 1
-        o.append(a)
+        o.append(r.triangular(0, 1, prom))
     for x in range(maxN):
         nodos += f" < {str(x)} : {str(o[x])} >"
         if x != maxN - 1:
@@ -434,28 +430,98 @@ def generarGrafo(maxN, minA, maxA):
         aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
         if x != lados[-1][0] or y != lados[-1][1]:
             aristas += ","
-    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o)
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+
+def grado(n, aristas):
+    grado = 1
+    for (x, y) in aristas:
+        if(x == n):
+            grado += 1
+    return grado
+
+def generarGrafoBarabasiAlbert(maxN, minA, maxA, opuesto):
+    malo = 1
+    while malo:
+        N = [0, 1]
+        lados = []
+        lados2 = []
+        for x in range(2, maxN):
+            for y in N:
+                if(r.random() < grado(y, lados) / (len(lados) + len(N) + 1)):
+                    lados.append((y, x))
+                    lados2.append((x, y))
+                if(r.random() < grado(x, lados) / (len(lados) + len(N) + 1)):
+                    lados.append((x, y))
+                    lados2.append((y, x))
+            N.append(x)
+        normal, invertido = 0, 0
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                normal += 1
+                for (x, y) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                invertido += 1
+                for (x, y) in lados2:
+                    if x == n and vis[y]:
+                        q.append(y)
+        if normal == maxN and invertido == maxN:
+            malo = 0
+    nodos = "< nodes:"
+    o = []
+    w = []
+    for x in range(maxN):
+        o.append(r.random())
+    for x in range(maxN):
+        nodos += f" < {str(x)} : {str(o[x])} >"
+        if x != maxN - 1:
+            nodos += ","
+    aristas = " ; edges:"
+    for (x, y) in lados:
+        val = r.random()
+        w.append((x, y, val))
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+        if x != lados[-1][0] or y != lados[-1][1]:
+            aristas += ","
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 patronComm = r'comm:\s*(\d+)'
 patronEstado = r'states:\s*(\d+)'
 
 #Guarda las metricas
-def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevos, datos):
+def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pasos, nombre, nuevos, datos):
     r.seed(time.time())
     buenas = 0
+    promedioOpinion = 0
     if(not nuevos):
         file = open(datos, "r")
         grafos = file.readlines()
         file.close()
     for i in range(iter):
-        estados = "0"
         if(nuevos):
-            grafo, minO, maxO = generarGrafo(maxN, minA, maxA)
+            if(tipoGrafo):
+                grafo, minO, maxO, pr = generarGrafo(maxN, minA, maxA, prom)
+            else:
+                grafo, minO, maxO, pr = generarGrafoBarabasiAlbert(maxN, minA, maxA, prom)
         else:
             grafo = grafos[i]
             opiniones = [round(float(y), 6) for x, y in re.findall(patronNodos, grafo)]
-            minO, maxO = min(opiniones), max(opiniones)
+            minO, maxO, pr = min(opiniones), max(opiniones), sum(opiniones) / len(opiniones)
+        promedioOpinion += pr
         process = subprocess.Popen(["maude.linux64", archivo],
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -469,7 +535,7 @@ def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevo
             f = open("debug" + nombre + ".txt", "a")
             f.write(grafo + "\n")
             f.close()
-            print("Buena")
+            #print("Buena")
             buenas += 1
             estado = re.search(patronEstado, output).group(1)
         output = output.split(("state"))[-1]
@@ -483,7 +549,10 @@ def experimentarEstrategia(iter, maxN, minA, maxA, archivo, pasos, nombre, nuevo
         f.close()
         if not i % 10:
             print(i)
-    print("Buenas: %d, Porcentaje: %.2f%%" % (buenas, (buenas / iter) * 100))
+    print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
 
-experimentarEstrategia(100, 100, 2, 5, "ex-vacc-hybrid.maude", 30, "S5-7", 0, "debugDG-3.txt")
-#experimentarEstrategia(100, 100, 2, 5, "ex-vacc-dgroot.maude", 0, "DG-3", 1, "")
+#experimentarEstrategia(10, 50, 2, 5, 0.01, 1, "ex-vacc-hybrid.maude", 30, "S5-9", 0, "debugDG-5.txt")
+#experimentarEstrategia(100, 100, 2, 5, 0.01, 1, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
+    
+experimentarEstrategia(1, 50, 2, 5, 0, 0, "ex-vacc-hybrid.maude", 30, "S5-10", 1, "debugDG-5.txt")
+#experimentarEstrategia(100, 100, 2, 5, 0, 0, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
