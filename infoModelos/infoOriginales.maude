@@ -375,7 +375,7 @@ mod HYBRID is
         ---else verifyNConsensusSteps(SE, STATE, consensus(opinions(nodes(STATE), NmaxNodes(SE, nodos)))) fi .
     
     op pasos : -> Nat .
-    eq pasos = 10 .
+    eq pasos = 10 . 
     -----------------------------------------------------------------
     --- Estrategia que intenta acercar todos los nodos al promedio de sus opiniones
     op s5 : SetEdge State -> SetEdge [memo] .
