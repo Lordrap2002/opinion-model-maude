@@ -1,0 +1,17 @@
+load grafo-SOM- .
+
+mod TEST is
+    pr GRAFOSOM- .
+
+    --- --------------------
+    var STATE : State .
+    var SE    : SetEdge .
+    var AG    : Agent .
+    --- --------------------
+
+    eq moduleName = 'TEST .
+    eq update(STATE, SE, AG) = update-SOM-(STATE, SE, AG) .
+    eq strategy(SE, STATE) = deGroot(SE) .
+endm
+
+--- search [, 15]  init =>* STATE such that consensus(STATE) .
