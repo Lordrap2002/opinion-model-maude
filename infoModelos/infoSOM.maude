@@ -1,20 +1,25 @@
 load ../base/semantics .
 
-fmod DATA1 is
+fmod DATA-SOM is
     pr FLOAT .
-    pr NAT . 
     sort Data1 .
+    sort Data2 .
 
     op [_,_,_] : Float Float Float -> Data1 [ctor] .
+    op [_,_,_,_] : Float Float Float Float -> Data2 [ctor] .
 endfm
 
-view Data1 from TRIV to DATA1 is
+view Data1 from TRIV to DATA-SOM is
   sort Elt to Data1 .
 endv
 
-mod DEFINITION2 is
+view Data2 from TRIV to DATA-SOM is
+  sort Elt to Data2 .
+endv
+
+mod DEFINITION1 is
     pr REW-RELATION .
-    pr DATA1 .
+    pr DATA-SOM .
     subsort Nat < Agent .
     subsort Data1 < Info .
 
@@ -35,7 +40,7 @@ mod DEFINITION2 is
 endm
 
 mod SOM- is
-    pr DEFINITION2 .
+    pr DEFINITION1 .
 
     vars AG AG' AG'' : Agent .
     vars SE          : SetEdge .
@@ -61,15 +66,6 @@ mod SOM- is
     eq prod-diff(AG, SO, ( < (AG' , AG'') :  W  >, SE), SUMW) = 
        prod-diff(AG, SO, SE, SUMW) [owise] .
 
-    op sum-W : Agent SetEdge -> Float .
-    op sum-W : Agent SetEdge Float -> Float .
-    eq sum-W(AG, SE) = sum-W(AG, SE, 0.0) .
-    eq sum-W(AG, empty, SUMW) = SUMW .
-    eq sum-W(AG, ( < (AG', AG ) :  W  >, SE), SUMW) = 
-        sum-W(AG, SE , SUMW + W ) .
-    eq sum-W(AG, ( < (AG' , AG'') :  W  >, SE), SUMW) = 
-        sum-W(AG, SE, SUMW) [owise] .
-
     op silent : Agent State SetEdge -> Float .
     eq silent(AG, STATE, SE) =
        if | nSilentNeigh(AG, nodes(STATE), SE) | / 2 <= 
@@ -92,4 +88,86 @@ mod SOM- is
     eq withinTol(F, T, (SO, < AG : [F', S, T'] >), SO') =
         if abs(F' - F) <= T then withinTol(F, T, SO, (SO', < AG : [F', S, T'] >))
         else withinTol(F, T, SO, SO') fi .
+endm
+
+mod DEFINITION2 is
+    pr REW-RELATION .
+    pr DATA-SOM .
+    subsort Nat < Agent .
+    subsort Data2 < Info .
+
+    var AG          : Agent .
+    var F S T F'     : Float .
+    var SN          : SetOpinion .
+    vars SE EDGES   : SetEdge .
+    vars STEPS COMM : Nat .
+    
+    eq opinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
+    eq opinion([F, S, T, F']) = F .
+
+    op silentState : Agent State -> Float .
+    eq silentState(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = S .
+
+    op tolerance : Agent State -> Float .
+    eq tolerance(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = T .
+
+    op pOpinion : Agent State -> Float .
+    eq pOpinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F' .
+endm
+
+mod SOM+ is
+    pr DEFINITION2 .
+
+    vars AG AG' AG'' : Agent .
+    vars SE          : SetEdge .
+    var SO SO'       : SetOpinion .
+    var STATE        : State .
+    vars SCOUNT SUMW : Float .
+    vars F F' W H H' : Float .
+    vars S S' T T'   : Float .
+
+    op deGroot : SetEdge -> SetSetEdge .
+    eq deGroot(SE) = SE .
+
+    op update-SOM+ : State SetEdge Agent -> Info .
+    eq update-SOM+(STATE, SE, AG) = 
+       [opinion(AG, STATE) + prod-diff(AG, nodes(STATE), SE), silent(AG, STATE, SE), tolerance(AG, STATE),
+        upPublicOp(AG, nodes(STATE), silent(AG, STATE, SE), opinion(AG, STATE) + prod-diff(AG, nodes(STATE), SE))] .
+
+    op prod-diff : Agent SetOpinion SetEdge -> Float .
+    op prod-diff : Agent SetOpinion SetEdge Float -> Float .
+    eq prod-diff(AG, SO, SE) = prod-diff(AG, SO, SE, 0.0) .
+    eq prod-diff(AG, SO, empty, SUMW) = SUMW .
+    eq prod-diff(AG, (SO, < AG : [F, S, T, H] >, < AG' : [F', S', T', H'] >), ( < (AG', AG ) :  W  >, SE), SUMW) = 
+       prod-diff(AG, (SO, < AG : [F, S, T, H] >, < AG' : [F', S', T', H'] >), SE, SUMW + ((H' - F) * W)) .
+    eq prod-diff(AG, SO, ( < (AG' , AG'') :  W  >, SE), SUMW) = 
+       prod-diff(AG, SO, SE, SUMW) [owise] .
+
+    op silent : Agent State SetEdge -> Float .
+    eq silent(AG, STATE, SE) =
+       if | nSilentNeigh(AG, nodes(STATE), SE) | / 2 <= 
+       | withinTol(opinion(AG, STATE), tolerance(AG, STATE), nSilentNeigh(AG, nodes(STATE), SE)) | then 1.0
+       else 0.0 fi .
+
+    op nSilentNeigh : Agent SetOpinion SetEdge -> SetOpinion .
+    op nSilentNeigh : Agent SetOpinion SetEdge SetOpinion -> SetOpinion .
+    eq nSilentNeigh(AG, SO, SE) = nSilentNeigh(AG, SO, SE, empty) .
+    eq nSilentNeigh(AG, SO, empty, SO') = SO' .
+    eq nSilentNeigh(AG, (SO, < AG : [F, S, T, H] >, < AG' : [F', 1.0, T', H'] >), ( < (AG', AG ) :  W  >, SE), SO') = 
+       nSilentNeigh(AG, (SO, < AG : [F, S, T, H] >, < AG' : [F', 1.0, T', H'] >), SE, (SO', < AG' : [F', 1.0, T', H'] >)) .
+    eq nSilentNeigh(AG, SO, ( < (AG' , AG'') :  W  >, SE), SO') = 
+       nSilentNeigh(AG, SO, SE, SO') [owise].
+
+    op withinTol : Float Float SetOpinion -> SetOpinion .
+    op withinTol : Float Float SetOpinion SetOpinion -> SetOpinion .
+    eq withinTol(F, T, SO) = withinTol(F, T, SO, empty) .
+    eq withinTol(F, T, empty, SO') = SO' .
+    eq withinTol(F, T, (SO, < AG : [F', S, T', H] >), SO') =
+        if abs(H - F) <= T then withinTol(F, T, SO, (SO', < AG : [F', S, T', H] >))
+        else withinTol(F, T, SO, SO') fi .
+
+   op upPublicOp : Agent SetOpinion Float Float -> Float .
+   eq upPublicOp(AG, (SO, < AG : [F, S, T, H] >), W, F') = 
+      if W > 0.0 then F'
+      else H fi .
 endm
