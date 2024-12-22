@@ -20,14 +20,14 @@ EPSILON (for checking consensus) must be defined in the user module
 ***)
 
 --- Nodes and edges
---- Sorts Agent must be populated later with a user-defined type
+--- Sorts Agent and Info must be populated later with a user-defined type
 fmod NODE-EDGE is
  pr CONVERSION . 
  pr EXT-BOOL .
- sorts Agent Info .      --- CAMBIO
+ sorts Agent Info .
  sort Opinion Edge .
 
- op  <_:_>   :     Agent Info -> Opinion [ctor] .             --- CAMBIO
+ op  <_:_>   :     Agent Info -> Opinion [ctor] .
  op  <`(_,_`):_> : Agent Agent Float -> Edge    [ctor] .
 
  --- Constant for checking consensus and stability 
@@ -45,7 +45,7 @@ endv
 view Edge from TRIV to NODE-EDGE is
   sort Elt to Edge .
 endv
---- CAMBIO
+
 view Info from TRIV to NODE-EDGE is
   sort Elt to Info .
 endv
@@ -87,7 +87,7 @@ fmod STATE is
  var STEPS        : Nat .
  var COMM         : Nat .
  var EDGES        : SetEdge .
- vars I I'        : Info .                   --- CAMBIO
+ vars I I'        : Info .
  --- ------------------
 
  --- Some selectors 
@@ -102,13 +102,9 @@ fmod STATE is
  eq steps( < nodes: SN ; edges: SE >  in step: STEPS comm: COMM strat: EDGES)  = STEPS .
  eq comm(  < nodes: SN ; edges: SE >  in step: STEPS comm: COMM strat: EDGES)  = COMM .
 
- --- CAMBIO
+ --- To be defined by the user
  op opinion : Agent State -> Float .
  op opinion : Info -> Float .
-
- --- CAMBIO
- --- op information : Agent State -> Info .
- --- eq information(AG, < nodes: (< AG : I >, SN) ; edges: SE > in step: STEPS comm: COMM strat: EDGES) = I .
 
  --- Set of target agents in a set of edges
  op incidents  : SetEdge          -> SetAgent .
@@ -142,7 +138,6 @@ fmod STATE is
 
  eq SO // SO' = minus(SO, SO', empty) .
  eq minus(SO, empty, SO'' ) = SO, SO'' .
- --- CAMBIO, aplicar info
  eq minus( (< AG : I >, SO), ( < AG :  I' >, SO'), SO'') = 
     minus( SO , SO', ( < AG :  I' > , SO'')) .
 
@@ -153,7 +148,6 @@ fmod STATE is
     consensus(SO) .
  ceq consensus(< nodes: SO ; edges: SE > in step: STEPS comm: COMM strat: EDGES ) = false 
      if | EDGES | <= 2 .
- --- CAMBIO, aplicar info
  ceq consensus(( < AG : I > ,  < AG' : I' > , SO)) = false 
      if abs(opinion(I) - opinion(I')) > EPSILON .
  eq consensus(SO) = true [owise] .
@@ -186,11 +180,11 @@ fmod STRATEGY is
  --- ----------------
 
 --------------------------------------------------------------------------
- --- CAMBIO, que sea definida por el usuario
+ --- To be defined by the user
  op strategy : SetEdge State -> SetSetEdge .
 
  --- To be defined by the user
- op update : State SetEdge Agent -> Info .       --- CAMBIO, usar info
+ op update : State SetEdge Agent -> Info .
 
  --- Returning the distance between the lowest and the highest belif
  op bdistance : State SetEdge -> Float .

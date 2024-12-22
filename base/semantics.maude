@@ -21,8 +21,8 @@ mod TRANSITION-SYSTEM is
  
  --- -------------------------------
  var AGENT   : Agent .
- var BELIEF  : Info .                --- CAMBIO, usar Info
- var BELIEF' : Info .                --- CAMBIO, usar Info
+ var BELIEF  : Info .
+ var BELIEF' : Info .
  var EDGES   : SetEdge .
  var STATE   : State .
 
@@ -48,7 +48,7 @@ mod REW-RELATION is
 
  --- To be defined in the user's module
  sort Model .
- op model :        -> Model .
+ op model :      -> Model .
  op moduleName : -> Qid .
 
 -------------------------------
@@ -67,13 +67,13 @@ mod REW-RELATION is
  var SSE     : SetSetEdge .
  var STEPS   : Nat .
  var COMM    : Nat .
- var I       : Info .                  --- CAMBIO
+ var I       : Info .
 -------------------------------
 
  crl [step] :   STATE => STATE'
  if
     not consensus(STATE) /\ --- just to avoid unnecessary rewritings 
-    EDGES ; SSE := strategy(edges(STATE), STATE) /\        --- CAMBIO
+    EDGES ; SSE := strategy(edges(STATE), STATE) /\
     STATE'      := step([moduleName], STATE,  EDGES) .
 
  --- A rewriting step according to the strategy 
@@ -83,17 +83,16 @@ mod REW-RELATION is
 
  eq step(M, STATE, empty, SO, EDGES) =  < nodes: ( nodes(STATE) // SO) ; edges: edges(STATE) > 
                                         in step: (steps(STATE) + 1) 
-                                        comm: (comm(STATE) + | non-self(EDGES) | ) strat: EDGES . ---[print EDGES].
+                                        comm: (comm(STATE) + | non-self(EDGES) | ) strat: EDGES .
  eq step(M, STATE, (AG, SETAG), SO, EDGES) = 
     step(M, STATE, SETAG, (SO, next(M, AG, EDGES, STATE)), EDGES) .
 
  op next : Module Agent SetEdge State -> Opinion .
- --- CAMBIO
  ceq  next(M, AG, EDGES, < nodes: (< AG : I >, SO) ; edges: SE > in step: STEPS comm: COMM strat: E) = OP
   if  SUBS := 'AGENT:Agent   <- upTerm(AG) ; 
-              'BELIEF:Info   <- upTerm(I) ;     --- CAMBIO 
+              'BELIEF:Info   <- upTerm(I) ;
               'STATE:State   <- upTerm(< nodes: (< AG : I >, SO) ; edges: SE > in step: STEPS comm: COMM strat: E) ; 
               'EDGES:SetEdge <- upTerm(EDGES) /\ 
       RES? := metaApply(M, upTerm(< AG : I >), 'atomic, SUBS, 0) /\
-      OP   := if RES? == failure then error else downTerm(getTerm(RES?), error) fi . --- CAMBIO
+      OP   := if RES? == failure then error else downTerm(getTerm(RES?), error) fi .
 endm
