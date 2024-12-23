@@ -531,13 +531,13 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
         output, error = process.communicate(command.encode())
         tiempo = time.time() - tiempo
         output = output.decode()
+        f = open("grafos" + nombre + ".txt", "a")
+        f.write(grafo + "\n")
+        f.close()
         if not "No solution" in output:
-            f = open("debug" + nombre + ".txt", "a")
-            f.write(grafo + "\n")
-            f.close()
-            #print("Buena")
+            print("Buena")
             buenas += 1
-            estado = re.search(patronEstado, output).group(1)
+        estado = re.search(patronEstado, output).group(1)
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
         opF = [round(float(y), 6) for x, y in dataNodos]
@@ -551,8 +551,130 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
 
-#experimentarEstrategia(10, 50, 2, 5, 0.01, 1, "ex-vacc-hybrid.maude", 30, "S5-9", 0, "debugDG-5.txt")
-#experimentarEstrategia(100, 100, 2, 5, 0.01, 1, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
+#experimentarEstrategia(100, 100, 2, 5, 0.5, 1, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
+experimentarEstrategia(10, 10, 2, 5, 0.5, 1, "ex-vacc-hybrid.maude", 30, "S1-1", 1, "grafosDG-5.txt")
     
-experimentarEstrategia(1, 50, 2, 5, 0, 0, "ex-vacc-hybrid.maude", 30, "S5-10", 1, "debugDG-5.txt")
 #experimentarEstrategia(100, 100, 2, 5, 0, 0, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
+#experimentarEstrategia(1, 50, 2, 5, 0, 0, "ex-vacc-hybrid.maude", 30, "S5-10", 1, "grafosDG-5.txt")
+
+# GRAFOS SOM
+
+def generarGrafoSOM(maxN, minA, maxA, tipo):
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    malo = 1
+    adyacencia = {}
+    while malo:
+        lados = []
+        lados2 = []
+        for x in range(maxN):
+            maxAdy = r.randint(minA, maxA)
+            adyacencia[x] = 0
+            for y in N:
+                p = r.random()
+                if p < 0.25 and x != y:
+                    lados.append((x, y))
+                    lados2.append((y, x))
+                    adyacencia[x] += 1
+                if adyacencia[x] == maxAdy:
+                    break
+            N.append(N[0])
+            N.pop(0)
+        normal, invertido = 0, 0
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                normal += 1
+                for (x, y) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                invertido += 1
+                for (x, y) in lados2:
+                    if x == n and vis[y]:
+                        q.append(y)
+        if normal == maxN and invertido == maxN:
+            malo = 0
+    nodos = "< nodes:"
+    o = []
+    w = []
+    i = {}
+    for x in range(maxN):
+        o.append(r.random())
+        i[x] = o[x]
+        if(tipo == "-"):
+            nodos += f" < {str(x)} : [{str(o[x])}, 1.0, {str(r.random())}] >"
+        else:
+            nodos += f" < {str(x)} : [{str(o[x])}, 1.0, {str(r.random())}, {str(o[x])}] >"
+        if x != maxN - 1:
+            nodos += ","
+    aristas = " ; edges:"
+    for (x, y) in lados:
+        val = r.random()
+        w.append((x, y, val))
+        i[y] += val
+    for (x, y, val) in w:
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val / i[y])} >"
+        if x != w[-1][0] or y != w[-1][1]:
+            aristas += ","
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+
+patronNodosSOM1 = r'<\s*(\d+)\s*:\s*\[\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?),\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*\]\s*>'
+patronNodosSOM2 = r'<\s*(\d+)\s*:\s*\[\s*([\d\.\-e]+),\s*([\d\.\-e]+),\s*([\d\.\-e]+),\s*([\d\.\-e]+)\s*\]'
+
+def experimentarSOM(iter, maxN, minA, maxA, tipoGrafo, archivo, pasos, nombre, nuevos, datos):
+    r.seed(time.time())
+    buenas = 0
+    promedioOpinion = 0
+    if(not nuevos):
+        file = open(datos, "r")
+        grafos = file.readlines()
+        file.close()
+    for i in range(iter):
+        if(nuevos):
+            grafo, minO, maxO, pr = generarGrafoSOM(maxN, minA, maxA, tipoGrafo)
+        else:
+            grafo = grafos[i]
+            opiniones = [round(float(y), 6) for x, y in re.findall(patronNodos, grafo)]
+            minO, maxO, pr = min(opiniones), max(opiniones), sum(opiniones) / len(opiniones)
+        promedioOpinion += pr
+        process = subprocess.Popen(["maude.linux64", archivo],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        
+        command = "search " + ("[, " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
+        tiempo = time.time()
+        output, error = process.communicate(command.encode())
+        tiempo = time.time() - tiempo
+        output = output.decode()
+        f = open("grafos" + nombre + ".txt", "a")
+        f.write(grafo + "\n")
+        f.close()
+        if not "No solution" in output:
+            buenas += 1
+        estado = re.search(patronEstado, output).group(1)
+        output = output.split(("state"))[-1]
+        dataNodos = re.findall(patronNodosSOM1, output)
+        opF = [round(float(y), 6) for x, y, z, w in dataNodos]
+        limI = [minO, maxO]
+        limF = [min(opF), max(opF)]
+        comm = int(re.search(patronComm, output).group(1))
+        f = open("log" + nombre + ".txt", "a")
+        f.write("%f %f %f %f %f %d %s\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, estado))
+        f.close()
+        if not i % 1:
+            print(i)
+    print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
+
+#experimentarSOM(100, 100, 2, 5, "-", "prueba-SOM.maude", 60, "SOM-1", 1, "")

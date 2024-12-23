@@ -1,7 +1,7 @@
 load grafo-SOM .
 
 mod TEST is
-    pr GRAFO-SOM+ .
+    pr GRAFO-SOM- .
 
     --- --------------------
     var STATE : State .
@@ -10,8 +10,9 @@ mod TEST is
     --- --------------------
 
     eq moduleName = 'TEST .
-    eq update(STATE, SE, AG) = update-SOM+(STATE, SE, AG) .
+    eq update(STATE, SE, AG) = update-SOM-(STATE, SE, AG) .
     eq strategy(SE, STATE) = deGroot(SE) .
 endm
 
+--- search [, 60]  init =>* STATE .
 --- search [, 15]  init =>* STATE such that consensus(STATE) .

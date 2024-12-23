@@ -1,27 +1,16 @@
 load ../base/semantics .
 
-fmod DATA-SOM is
+mod DATA-SOM is
     pr FLOAT .
-    sort Data1 .
-    sort Data2 .
+    pr REW-RELATION .
 
-    op [_,_,_] : Float Float Float -> Data1 [ctor] .
-    op [_,_,_,_] : Float Float Float Float -> Data2 [ctor] .
-endfm
-
-view Data1 from TRIV to DATA-SOM is
-  sort Elt to Data1 .
-endv
-
-view Data2 from TRIV to DATA-SOM is
-  sort Elt to Data2 .
-endv
+    op [_,_,_] : Float Float Float -> Info [ctor] .
+    op [_,_,_,_] : Float Float Float Float -> Info [ctor] .
+endm
 
 mod DEFINITION1 is
-    pr REW-RELATION .
     pr DATA-SOM .
     subsort Nat < Agent .
-    subsort Data1 < Info .
 
     var AG          : Agent .
     var F S T       : Float .
@@ -66,14 +55,14 @@ mod SOM- is
     eq prod-diff(AG, SO, ( < (AG' , AG'') :  W  >, SE), SUMW) = 
        prod-diff(AG, SO, SE, SUMW) [owise] .
 
-    op silent : Agent State SetEdge -> Float .
+    op silent : Agent State SetEdge -> Float [memo] .
     eq silent(AG, STATE, SE) =
-       if | nSilentNeigh(AG, nodes(STATE), SE) | / 2 <= 
+       if ceiling(| nSilentNeigh(AG, nodes(STATE), SE) | / 2) <= 
        | withinTol(opinion(AG, STATE), tolerance(AG, STATE), nSilentNeigh(AG, nodes(STATE), SE)) | then 1.0
        else 0.0 fi .
 
-    op nSilentNeigh : Agent SetOpinion SetEdge -> SetOpinion .
-    op nSilentNeigh : Agent SetOpinion SetEdge SetOpinion -> SetOpinion .
+    op nSilentNeigh : Agent SetOpinion SetEdge -> SetOpinion [memo] .
+    op nSilentNeigh : Agent SetOpinion SetEdge SetOpinion -> SetOpinion [memo] .
     eq nSilentNeigh(AG, SO, SE) = nSilentNeigh(AG, SO, SE, empty) .
     eq nSilentNeigh(AG, SO, empty, SO') = SO' .
     eq nSilentNeigh(AG, (SO, < AG : [F, S, T] >, < AG' : [F', 1.0, T'] >), ( < (AG', AG ) :  W  >, SE), SO') = 
@@ -81,8 +70,8 @@ mod SOM- is
     eq nSilentNeigh(AG, SO, ( < (AG' , AG'') :  W  >, SE), SO') = 
        nSilentNeigh(AG, SO, SE, SO') [owise].
 
-    op withinTol : Float Float SetOpinion -> SetOpinion .
-    op withinTol : Float Float SetOpinion SetOpinion -> SetOpinion .
+    op withinTol : Float Float SetOpinion -> SetOpinion [memo] .
+    op withinTol : Float Float SetOpinion SetOpinion -> SetOpinion [memo] .
     eq withinTol(F, T, SO) = withinTol(F, T, SO, empty) .
     eq withinTol(F, T, empty, SO') = SO' .
     eq withinTol(F, T, (SO, < AG : [F', S, T'] >), SO') =
@@ -91,10 +80,8 @@ mod SOM- is
 endm
 
 mod DEFINITION2 is
-    pr REW-RELATION .
     pr DATA-SOM .
     subsort Nat < Agent .
-    subsort Data2 < Info .
 
     var AG          : Agent .
     var F S T F'     : Float .
@@ -145,7 +132,7 @@ mod SOM+ is
 
     op silent : Agent State SetEdge -> Float .
     eq silent(AG, STATE, SE) =
-       if | nSilentNeigh(AG, nodes(STATE), SE) | / 2 <= 
+       if ceiling(| nSilentNeigh(AG, nodes(STATE), SE) | / 2) <= 
        | withinTol(opinion(AG, STATE), tolerance(AG, STATE), nSilentNeigh(AG, nodes(STATE), SE)) | then 1.0
        else 0.0 fi .
 

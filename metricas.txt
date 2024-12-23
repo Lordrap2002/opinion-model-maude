@@ -1,4 +1,4 @@
-Grafos de 100 nodos, entre 2 y 5 aristas por nodo
+### Grafos de 100 nodos, entre 2 y 5 aristas por nodo ###
 
 1. Estrategia s4 (5 pasos)
 ---------------------------------------------------------------------------------------------------------
