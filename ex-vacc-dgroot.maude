@@ -2,7 +2,7 @@
  Analysis with DGroot
 ***)
 
-load pruebasModelosOriginales/ex-vaccines1 .
+load ex-vaccines4 .
 
 mod TEST is
     pr VACCINES .

@@ -500,7 +500,7 @@ def generarGrafoBarabasiAlbert(maxN, minA, maxA, opuesto):
 
 patronNodos = r'<\s*(\d+)\s*:\s*([\d\.e\-\+]+)\s*>'
 patronComm = r'comm:\s*(\d+)'
-patronEstado = r'states:\s*(\d+)'
+patronStep = r'step:\s*(\d+)'
 
 #Guarda las metricas
 def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pasos, nombre, nuevos, datos):
@@ -526,7 +526,7 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         
-        command = "search " + ("[, " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
+        command = "search " + ("[1 , " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
         tiempo = time.time()
         output, error = process.communicate(command.encode())
         tiempo = time.time() - tiempo
@@ -537,12 +537,12 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
         if not "No solution" in output:
             print("Buena")
             buenas += 1
-        estado = re.search(patronEstado, output).group(1)
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
         opF = [round(float(y), 6) for x, y in dataNodos]
         limI = [minO, maxO]
         limF = [min(opF), max(opF)]
+        estado = int(re.search(patronStep, output).group(1))
         comm = int(re.search(patronComm, output).group(1))
         f = open("log" + nombre + ".txt", "a")
         f.write("%f %f %f %f %f %d %s\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, estado))
@@ -551,8 +551,8 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
 
-#experimentarEstrategia(100, 100, 2, 5, 0.5, 1, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
-experimentarEstrategia(10, 10, 2, 5, 0.5, 1, "ex-vacc-hybrid.maude", 30, "S1-1", 1, "grafosDG-5.txt")
+experimentarEstrategia(100, 20, 2, 5, 0.5, 1, "ex-vacc-dgroot.maude", 50, "DG-6", 0, "grafosS3-1.txt")
+#experimentarEstrategia(90, 20, 2, 5, 0.5, 1, "ex-vacc-hybrid.maude", 50, "S3-1", 1, "grafosDG-5.txt")
     
 #experimentarEstrategia(100, 100, 2, 5, 0, 0, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
 #experimentarEstrategia(1, 50, 2, 5, 0, 0, "ex-vacc-hybrid.maude", 30, "S5-10", 1, "grafosDG-5.txt")
@@ -653,7 +653,7 @@ def experimentarSOM(iter, maxN, minA, maxA, tipoGrafo, archivo, pasos, nombre, n
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         
-        command = "search " + ("[, " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
+        command = "search " + ("[1 , " + str(pasos) + "] " if pasos else "") + grafo + " =>* STATE such that consensus(STATE) .\nshow search graph .\n"
         tiempo = time.time()
         output, error = process.communicate(command.encode())
         tiempo = time.time() - tiempo
@@ -663,12 +663,12 @@ def experimentarSOM(iter, maxN, minA, maxA, tipoGrafo, archivo, pasos, nombre, n
         f.close()
         if not "No solution" in output:
             buenas += 1
-        estado = re.search(patronEstado, output).group(1)
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodosSOM1, output)
         opF = [round(float(y), 6) for x, y, z, w in dataNodos]
         limI = [minO, maxO]
         limF = [min(opF), max(opF)]
+        estado = int(re.search(patronStep, output).group(1))
         comm = int(re.search(patronComm, output).group(1))
         f = open("log" + nombre + ".txt", "a")
         f.write("%f %f %f %f %f %d %s\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, estado))

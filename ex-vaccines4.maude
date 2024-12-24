@@ -23,6 +23,7 @@ mod VACCINES is
                 < (4 , 0) : 0.1261 >, < (4 , 6) : 0.3672 >,
                 < (5 , 0) : 0.1727 >, < (5 , 1) : 0.3429 >, < (5 , 2) : 0.6859 >,
                 < (6 , 3) : 0.0242 > .
+
     eq initnet =  < nodes: nodes ; edges: edges >  .
 
     op init : -> State .

@@ -132,8 +132,8 @@ mod HYBRID is
     ---var SSA          : SetSetAgent .
 
     --- Operación que devuelve la excentricidad de un nodo
-    op eccentricity : Agent SetEdge -> Float .
-    op eccentricity : SetAgent SetEdge SetAgent SetAgent Float -> Float .
+    op eccentricity : Agent SetEdge -> Float [memo] .
+    op eccentricity : SetAgent SetEdge SetAgent SetAgent Float -> Float [memo] .
     eq eccentricity(AG, SE) = eccentricity((AG), SE, incidents(SE), (AG), 0.0) .
     eq eccentricity(SA', SE, SA', SA, F) = F .
     eq eccentricity((AG, SA), (< (AG , AG') : F' >, SE), SA', SA'', F) = 
@@ -142,13 +142,13 @@ mod HYBRID is
         eccentricity((SA, SA''), SE, SA', SA'', F + 1.0) .
 
     --- Operación que devuelve las excentricidades de los nodos de un grafo
-    op eccentricities : SetOpinion SetEdge -> SetOpinion .
+    op eccentricities : SetOpinion SetEdge -> SetOpinion [memo] .
     eq eccentricities((< AG : F >, SO), SE) = (< AG : eccentricity(AG, SE)>, eccentricities(SO, SE)) .
     eq eccentricities(empty, SE) = empty .
 
     --- Operación que devuelve el/un nodo central de un grafo
     op center : SetOpinion SetEdge -> Agent [memo] .
-    op center : SetOpinion Opinion -> Agent .
+    op center : SetOpinion Opinion -> Agent [memo] .
     eq center(SO, SE) = center(eccentricities(SO, SE), < 1001 : 10000.0 >) .
     eq center((< AG : F >, SO), < AG' : F' >) =
         if F < F' then center(SO, (< AG : F >)) 

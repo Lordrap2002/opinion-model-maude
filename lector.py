@@ -76,8 +76,8 @@ def metricas(archivo):
             x, y, z, w, t, c, p = list(map(float, linea.split()))
             promCam += (y - x) - (w - z)
             promDif += (w - z)
-            promSt += p
             if(w - z <= 0.005):
+                promSt += p
                 promT += t
                 promComm += c
                 promOp += z + w
@@ -97,4 +97,4 @@ def metricas(archivo):
     file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %5d | %5d | %.5f\n" % (n, promDif, promCam, buenas, promT, promComm, promSt, promOp))
     file.close()
 
-metricas("logS5-9.txt")
+metricas("logDG-6.txt")
