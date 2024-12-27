@@ -129,7 +129,7 @@ fmod STATE is
  op influence : Agent SetEdge SetAgent  -> SetAgent .
  eq influence(AG, SE) = influence(AG, SE, empty) .
  eq influence(AG, empty, SA) = SA .
- eq influence(AG, ( < ( AG' , AG) : W >, SE), SA) = influence(AG, SE, (SA, AG')) .
+ ceq influence(AG, ( < ( AG' , AG) : W >, SE), SA) = influence(AG, SE, (SA, AG')) if AG =/= AG' .
  eq influence(AG, ( < ( AG', AG'' ) : W >,  SE), SA) = influence(AG, SE, SA) [owise] .
 
  --- Updating the opinions with a new set of opinions
