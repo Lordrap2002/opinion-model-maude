@@ -4,6 +4,7 @@ import subprocess
 import time
 from collections import deque
 import re
+import ModeloGeneral
 
 def nodes1():
     l = []
@@ -375,7 +376,6 @@ def generarGrafo(maxN, minA, maxA, prom):
     adyacencia = {}
     while malo:
         lados = []
-        lados2 = []
         for x in range(maxN):
             maxAdy = r.randint(minA, maxA)
             adyacencia[x] = 0
@@ -383,7 +383,6 @@ def generarGrafo(maxN, minA, maxA, prom):
                 p = r.random()
                 if p < 0.25 and x != y:
                     lados.append((x, y))
-                    lados2.append((y, x))
                     adyacencia[x] += 1
                 if adyacencia[x] == maxAdy:
                     break
@@ -409,7 +408,7 @@ def generarGrafo(maxN, minA, maxA, prom):
             if(vis[n]):
                 vis[n] -= 1
                 invertido += 1
-                for (x, y) in lados2:
+                for (y, x) in lados:
                     if x == n and vis[y]:
                         q.append(y)
         if normal == maxN and invertido == maxN:
@@ -535,7 +534,7 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
         f.write(grafo + "\n")
         f.close()
         if not "No solution" in output:
-            print("Buena")
+            #print("Buena")
             buenas += 1
         output = output.split(("state"))[-1]
         dataNodos = re.findall(patronNodos, output)
@@ -551,8 +550,8 @@ def experimentarEstrategia(iter, maxN, minA, maxA, prom, tipoGrafo, archivo, pas
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
 
-experimentarEstrategia(100, 20, 2, 5, 0.5, 1, "ex-vacc-dgroot.maude", 50, "DG-6", 0, "grafosS3-1.txt")
-#experimentarEstrategia(90, 20, 2, 5, 0.5, 1, "ex-vacc-hybrid.maude", 50, "S3-1", 1, "grafosDG-5.txt")
+#experimentarEstrategia(100, 190, 2, 5, 0.5, 1, "ex-vacc-dgroot.maude", 1000, "DG-PruebaTiempo-190N", 1, "")
+#experimentarEstrategia(100, 220, 2, 5, 0.5, 1, "ex-vacc-hybrid.maude", 1000, "S5-PruebaTiempo-220N", 1, "grafosDG-PruebaTiempo-200N.txt")
     
 #experimentarEstrategia(100, 100, 2, 5, 0, 0, "ex-vacc-dgroot.maude", 0, "DG-5", 1, "")
 #experimentarEstrategia(1, 50, 2, 5, 0, 0, "ex-vacc-hybrid.maude", 30, "S5-10", 1, "grafosDG-5.txt")
@@ -664,8 +663,11 @@ def experimentarSOM(iter, maxN, minA, maxA, tipoGrafo, archivo, pasos, nombre, n
         if not "No solution" in output:
             buenas += 1
         output = output.split(("state"))[-1]
-        dataNodos = re.findall(patronNodosSOM1, output)
-        opF = [round(float(y), 6) for x, y, z, w in dataNodos]
+        dataNodos = re.findall(patronNodosSOM1 if tipoGrafo == "-" else patronNodosSOM2, output)
+        if(tipoGrafo == "-"):
+            opF = [round(float(y), 6) for x, y, z, w in dataNodos]
+        else:
+            opF = [round(float(y), 6) for x, y, z, w, zz in dataNodos]
         limI = [minO, maxO]
         limF = [min(opF), max(opF)]
         estado = int(re.search(patronStep, output).group(1))
@@ -677,4 +679,223 @@ def experimentarSOM(iter, maxN, minA, maxA, tipoGrafo, archivo, pasos, nombre, n
             print(i)
     print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
 
-#experimentarSOM(100, 100, 2, 5, "-", "prueba-SOM.maude", 60, "SOM-1", 1, "")
+#experimentarSOM(100, 100, 2, 5, "+", "prueba-SOM.maude", 60, "SOM-2", 1, "")
+    
+##############################################################################################################################
+patron_nodos = r"<\s*(\d+)\s*:\s*([0-9.eE+-]+)\s*>"
+patron_aristas = r"<\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*:\s*([0-9.eE+-]+)\s*>"
+
+def generarGrafoPy(maxN, prom, probArista):
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    malo = 1
+    while malo:
+        lados = []
+        for x in range(maxN):
+            for y in N:
+                p = r.random()
+                if p < probArista and x != y:
+                    lados.append((x, y))
+        normal, invertido = 0, 0
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                normal += 1
+                for (x, y) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                invertido += 1
+                for (y, x) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        if normal == maxN and invertido == maxN:
+            malo = 0
+    nodos = "< nodes:"
+    o = []
+    w = []
+    for x in range(maxN):
+        o.append(r.random())
+    for x in range(maxN):
+        nodos += f" < {str(x)} : {str(o[x])} >"
+        if x != maxN - 1:
+            nodos += ","
+    aristas = " ; edges:"
+    for (x, y) in lados:
+        val = r.random()
+        w.append((x, y, val))
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+        if x != lados[-1][0] or y != lados[-1][1]:
+            aristas += ","
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+
+
+def leerGrafo(grafo):
+    opiniones = {int(id_): float(op) for id_, op in re.findall(patron_nodos, grafo)}
+    aristas = [(int(src), int(dst), float(peso))
+               for src, dst, peso in re.findall(patron_aristas, grafo)]
+    return opiniones, aristas
+
+def experimentarEstrategiaPy(iter, maxN, minA, maxA, prom, tipoGrafo, tipoSeleccion, pasos, nombre, nuevos, datos):
+    r.seed(time.time())
+    tiempoInicial = time.time()
+    tiempoBusqueda, buenas, promedioOpinion = 0, 0, 0
+    if not nuevos:
+        file = open(datos, "r")
+        grafos = file.readlines()
+        file.close()
+    for i in range(iter):
+        if nuevos:
+            if tipoGrafo:
+                grafo, minO, maxO, pr = generarGrafoPy(maxN, prom, maxA / maxN)
+                #grafo, minO, maxO, pr = generarGrafo(maxN, minA, maxA, prom)
+            else:
+                grafo, minO, maxO, pr = generarGrafoBarabasiAlbert(maxN, minA, maxA, prom)
+        else:
+            grafo = grafos[i].strip()
+            opiniones = [round(float(y), 6) for x, y in re.findall(patronNodos, grafo)]
+            minO, maxO, pr = min(opiniones), max(opiniones), sum(opiniones) / len(opiniones)
+        promedioOpinion += pr
+        tiempo = time.time()
+        dataNodos, step, comm, consenso = ModeloGeneral.BuscarConsenso(leerGrafo(grafo), tipoSeleccion, pasos)
+        tiempo = time.time() - tiempo
+        tiempoBusqueda += tiempo
+        f = open("grafos" + nombre + ".txt", "a")
+        f.write(grafo + "\n")
+        f.close()
+        if consenso:
+            buenas += 1
+        opF = [round(float(y), 6) for y in dataNodos.values()]
+        limI = [minO, maxO]
+        limF = [min(opF), max(opF)]
+        f = open("log" + nombre + ".txt", "a")
+        f.write("%f %f %f %f %f %d %d\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, step))
+        f.close()
+        if not i % 10:
+            print(i)
+    tiempoFinal = (time.time() - tiempoInicial) / 60
+    tiempoBusqueda /= 60
+    print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
+    print("Tiempo Total (Min): %.2f, Tiempo Busqueda (Min): %.2f, Porcentaje Busqueda: %.2f%%" % (tiempoFinal, tiempoBusqueda, (tiempoBusqueda / tiempoFinal) * 100))
+
+#experimentarEstrategiaPy(100, 3000, 2, 10, 0.5, 1, "degroot", 1000, "TestDG-PruebaTiempo-3000N-Py", 1, "")
+#experimentarEstrategiaPy(100, 5000, 2, 10, 0.5, 1, "s5", 1000,
+#                         "S5-PruebaTiempo-5000N-Py", 0,
+#                         "experimentos\\PruebaTiempo\\DeGrootPython\\AristasProbabilidad\\10\\grafosDG-PruebaTiempo-5000N-Py.txt")
+#experimentarEstrategiaPy(1, 300, 2, 5, 0.5, 1, "degroot", 1000, "PruebaTiempo", 1, "")
+#experimentarEstrategiaPy(1, 10, 2, 10, 0.5, 1, "degroot", 1000, "TestDG-1000N-Py", 1, "")
+#experimentarEstrategiaPy(1, 10, 2, 10, 0.5, 1, "s5", 1000, "TestS5-1000N-Py", 0, "grafosTestDG-1000N-Py.txt")
+
+##############################################################################################################################
+
+def generarGrafoPy2(maxN, grafoBase, probArista):
+    N = []
+    for i in range(maxN):
+        N.append(i)
+    malo = 1
+    while malo:
+        lados = []
+        for x in range(maxN):
+            for y in N:
+                p = r.random()
+                if p < probArista and x != y:
+                    lados.append((x, y))
+        normal, invertido = 0, 0
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                normal += 1
+                for (x, y) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        q = deque()
+        q.append(0)
+        vis = [1] * maxN
+        while(len(q)):
+            n = q.popleft()
+            if(vis[n]):
+                vis[n] -= 1
+                invertido += 1
+                for (y, x) in lados:
+                    if x == n and vis[y]:
+                        q.append(y)
+        if normal == maxN and invertido == maxN:
+            malo = 0
+    nodos = "< nodes:"
+    o = []
+    w = []
+    for x in range(maxN):
+        o.append(r.random())
+    for x in range(maxN):
+        nodos += f" < {str(x)} : {str(o[x])} >"
+        if x != maxN - 1:
+            nodos += ","
+    aristas = " ; edges:"
+    for (x, y) in lados:
+        val = r.random()
+        w.append((x, y, val))
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+        if x != lados[-1][0] or y != lados[-1][1]:
+            aristas += ","
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+
+def experimentarEstrategiaPy2(iter, maxN, maxA, base, tipoSeleccion, pasos, nombre, nuevos, datos):
+    r.seed(time.time())
+    tiempoInicial = time.time()
+    tiempoBusqueda, buenas, promedioOpinion = 0, 0, 0
+    fileBase = open(base, "r")
+    grafosBase = fileBase.readlines()
+    fileBase.close()
+    if not nuevos:
+        file = open(datos, "r")
+        grafos = file.readlines()
+        file.close()
+    for i in range(iter):
+        if nuevos:
+            grafo, minO, maxO, pr = generarGrafoPy2(maxN, leerGrafo(grafosBase[i].strip()), maxA / maxN)
+        else:
+            grafo = grafos[i].strip()
+            opiniones = [round(float(y), 6) for x, y in re.findall(patronNodos, grafo)]
+            minO, maxO, pr = min(opiniones), max(opiniones), sum(opiniones) / len(opiniones)
+        promedioOpinion += pr
+        tiempo = time.time()
+        dataNodos, step, comm, consenso = ModeloGeneral.BuscarConsenso(leerGrafo(grafo), tipoSeleccion, pasos)
+        tiempo = time.time() - tiempo
+        tiempoBusqueda += tiempo
+        f = open("grafos" + nombre + ".txt", "a")
+        f.write(grafo + "\n")
+        f.close()
+        if consenso:
+            buenas += 1
+        opF = [round(float(y), 6) for y in dataNodos.values()]
+        limI = [minO, maxO]
+        limF = [min(opF), max(opF)]
+        f = open("log" + nombre + ".txt", "a")
+        f.write("%f %f %f %f %f %d %d\n" % (limI[0], limI[1], limF[0], limF[1], tiempo, comm, step))
+        f.close()
+        if not i % 10:
+            print(i)
+    tiempoFinal = (time.time() - tiempoInicial) / 60
+    tiempoBusqueda /= 60
+    print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
+    print("Tiempo Total (Min): %.2f, Tiempo Busqueda (Min): %.2f, Porcentaje Busqueda: %.2f%%" % (tiempoFinal, tiempoBusqueda, (tiempoBusqueda / tiempoFinal) * 100))
+
+#experimentarEstrategiaPy2(100, 3000, 2, 10, 0.5, 1, "degroot", 1000, "TestDG-PruebaTiempo-3000N-Py", 1, "")
+#experimentarEstrategiaPy2(100, 5000, 2, 10, 0.5, 1, "s5", 1000,
+#                         "S5-PruebaTiempo-5000N-Py", 0,
+#                         "experimentos\\PruebaTiempo\\DeGrootPython\\AristasProbabilidad\\10\\grafosDG-PruebaTiempo-5000N-Py.txt")
