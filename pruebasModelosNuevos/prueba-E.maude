@@ -20,4 +20,4 @@ endm
 
 eof
 
-search  init =>* STATE such that consensus(STATE) .s
+search  init =>* STATE such that consensus(STATE) .

@@ -1,35 +1,38 @@
 load ../base/semantics .
 
-mod DATA-SOM is
+mod DEFINITION is
    pr FLOAT .
    pr REW-RELATION .
-
-   op [_,_,_] : Float Float Float -> Info [ctor] .
-   op [_,_,_,_] : Float Float Float Float -> Info [ctor] .
-endm
-
-mod DEFINITION1 is
-   pr DATA-SOM .
    subsort Nat < Agent .
 
    var AG          : Agent .
-   var F S T       : Float .
+   var F S T F'    : Float .
    var SN          : SetOpinion .
    vars SE EDGES   : SetEdge .
    vars STEPS COMM : Nat .
-   
+
+   op [_,_,_] : Float Float Float -> Info [ctor] .
+   op [_,_,_,_] : Float Float Float Float -> Info [ctor] .
+
    eq opinion(AG, < nodes: (< AG : [F, S, T] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
    eq opinion([F, S, T]) = F .
+   eq opinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
+   eq opinion([F, S, T, F']) = F .
 
    op silentState : Agent State -> Float .
    eq silentState(AG, < nodes: (< AG : [F, S, T] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = S .
+   eq silentState(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = S .
 
    op tolerance : Agent State -> Float .
    eq tolerance(AG, < nodes: (< AG : [F, S, T] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = T .
+   eq tolerance(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = T .
+   
+   op pOpinion : Agent State -> Float .
+   eq pOpinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F' .
 endm
 
 mod SOM- is
-   pr DEFINITION1 .
+   pr DEFINITION .
 
    vars AG AG' AG'' : Agent .
    vars SE          : SetEdge .
@@ -79,31 +82,8 @@ mod SOM- is
       else withinTol(F, T, SO, SO') fi .
 endm
 
-mod DEFINITION2 is
-   pr DATA-SOM .
-   subsort Nat < Agent .
-
-   var AG          : Agent .
-   var F S T F'     : Float .
-   var SN          : SetOpinion .
-   vars SE EDGES   : SetEdge .
-   vars STEPS COMM : Nat .
-   
-   eq opinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F .
-   eq opinion([F, S, T, F']) = F .
-
-   op silentState : Agent State -> Float .
-   eq silentState(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = S .
-
-   op tolerance : Agent State -> Float .
-   eq tolerance(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = T .
-
-   op pOpinion : Agent State -> Float .
-   eq pOpinion(AG, < nodes: (< AG : [F, S, T, F'] >, SN) ; edges: SE >  in step: STEPS comm: COMM strat: EDGES) = F' .
-endm
-
 mod SOM+ is
-   pr DEFINITION2 .
+   pr DEFINITION .
 
    vars AG AG' AG'' : Agent .
    vars SE          : SetEdge .
@@ -158,19 +138,3 @@ mod SOM+ is
       if W == 1.0 then F'
       else H fi .
 endm
-
---- rew in TEST : update-silence-spiral-mem(init, edges(init), 1) .
---- rew in TEST : update-SOM+(init, edges(init), 1) .
-
---- rew in TEST : update-silence-mem(1, init, edges(init)) .
---- rew in TEST : silent(1, init, edges(init)) .
-
---- rew in TEST : influence(1, edges(init)) .
---- rew in TEST : nNeigh(1, nodes(init), edges(init)) .
-
---- rew in TEST : count-close-opinions(1, influence(1, edges(init)), nodes(init)) .
---- rew in TEST : | withinTol(opinion(1, init), tolerance(1, init), nNeigh(1, nodes(init), edges(init))) | .
---- rew in TEST : .
---- rew in TEST : .
---- rew in TEST : .
---- rew in TEST : .
