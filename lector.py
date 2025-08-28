@@ -71,6 +71,7 @@ def limpiar():
 
 def metricas(archivo):
     n, promDif, promCam, buenas, promT, promComm, promSt, promOp = 0, 0, 0, 0, 0, 0, 0, 0
+    maxT, minT, maxCom, minCom, maxSt, minSt = 0, 100000000000, 0, 100000000000, 0, 100000000000
     with open(archivo, "r") as file:
         for linea in file:
             x, y, z, w, t, c, p = list(map(float, linea.split()))
@@ -82,19 +83,33 @@ def metricas(archivo):
                 promComm += c
                 promOp += z + w
                 buenas += 1
+                if(maxT < t):
+                    maxT = t
+                if(minT > t):
+                    minT = t
+                if(maxCom < c):
+                    maxCom = c
+                if(minCom > c):
+                    minCom = c
+                if(maxSt < p):
+                    maxSt = p
+                if(minSt > p):
+                    minSt = p
             n += 1
         promCam /= n 
         promDif /= n
         promT /= (buenas * 60)
+        maxT /= 60
+        minT /= 60
         promComm /= buenas
         promOp /= (buenas * 2)
         promSt /= buenas
     file = open("metricas.txt", "a")
     #file.write("N. Promedios Generador Prueba4 (100 nodos) - Estrategia X\n")
     #file.write("---------------------------------------------------------------------------------------------------------\n")
-    #file.write("Grafos | Max-min | Cambio diferencia | Conse nso (0.005) | Tiempo Consenso (min) |  Com  | Pasos | Opinión\n")
+    #file.write("Grafos | Max-min | Cambio diferencia | Consenso (0.005) | Tiempo Consenso (min) |  Com  | Pasos | Opinión\n")
     #file.write("---------------------------------------------------------------------------------------------------------\n")
-    file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %5d | %5d | %.5f\n" % (n, promDif, promCam, buenas, promT, promComm, promSt, promOp))
+    file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %7d | %5d | %.5f | %11.2f | %11.2f | %7d | %7d | %9d | %9d\n" % (n, promDif, promCam, buenas, promT, promComm, promSt, promOp, maxT, minT, maxCom, minCom, maxSt, minSt))
     file.close()
 
-metricas("logDG-6.txt")
+metricas("logS5-PruebaTiempo-10N-Py.txt")
