@@ -112,4 +112,4 @@ def metricas(archivo):
     file.write("%6d | %.5f | %17.6f | %16d | %21.2f | %7d | %5d | %.5f | %11.2f | %11.2f | %7d | %7d | %9d | %9d\n" % (n, promDif, promCam, buenas, promT, promComm, promSt, promOp, maxT, minT, maxCom, minCom, maxSt, minSt))
     file.close()
 
-metricas("logS5-PruebaTiempo-10N-Py.txt")
+metricas("logS5-PruebaTiempo-25000N-Py.txt")

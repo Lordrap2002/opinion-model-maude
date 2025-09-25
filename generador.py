@@ -2,7 +2,7 @@ from sys import stdin
 import random as r
 import subprocess
 import time
-from collections import deque
+from collections import deque, defaultdict
 import re
 import ModeloGeneral
 
@@ -800,68 +800,37 @@ def experimentarEstrategiaPy(iter, maxN, minA, maxA, prom, tipoGrafo, tipoSelecc
 ##############################################################################################################################
 
 def generarGrafoPy2(maxN, grafoBase, probArista):
-    N = []
-    for i in range(maxN):
-        N.append(i)
-    malo = 1
-    while malo:
-        lados = []
-        for x in range(maxN):
-            for y in N:
-                p = r.random()
-                if p < probArista and x != y:
-                    lados.append((x, y))
-        normal, invertido = 0, 0
-        q = deque()
-        q.append(0)
-        vis = [1] * maxN
-        while(len(q)):
-            n = q.popleft()
-            if(vis[n]):
-                vis[n] -= 1
-                normal += 1
-                for (x, y) in lados:
-                    if x == n and vis[y]:
-                        q.append(y)
-        q = deque()
-        q.append(0)
-        vis = [1] * maxN
-        while(len(q)):
-            n = q.popleft()
-            if(vis[n]):
-                vis[n] -= 1
-                invertido += 1
-                for (y, x) in lados:
-                    if x == n and vis[y]:
-                        q.append(y)
-        if normal == maxN and invertido == maxN:
-            malo = 0
+    o, lados = grafoBase
+    for i in range(len(o), maxN):
+        o[i] = r.random()
+        fijo = r.randint(0, i - 1)
+        lados.append((i, r.randint(0, i - 1), r.random()))
+        lados.append((fijo, i, r.random()))
+        for x in range(i):
+            p = r.random()
+            if p < probArista and x != fijo:
+                lados.append((x, i, r.random()))
     nodos = "< nodes:"
-    o = []
-    w = []
-    for x in range(maxN):
-        o.append(r.random())
     for x in range(maxN):
         nodos += f" < {str(x)} : {str(o[x])} >"
         if x != maxN - 1:
             nodos += ","
     aristas = " ; edges:"
-    for (x, y) in lados:
-        val = r.random()
-        w.append((x, y, val))
-        aristas += f" < ( {str(x)} , {str(y)} ) : {str(val)} >"
+    for (x, y, w) in lados:
+        aristas += f" < ( {str(x)} , {str(y)} ) : {str(w)} >"
         if x != lados[-1][0] or y != lados[-1][1]:
             aristas += ","
-    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o), max(o), sum(o) / len(o)
+    return nodos + aristas + " > in step: 0 comm: 0 strat: empty", min(o.values()), max(o.values()), sum(o.values()) / len(o.values())
 
 def experimentarEstrategiaPy2(iter, maxN, maxA, base, tipoSeleccion, pasos, nombre, nuevos, datos):
     r.seed(time.time())
     tiempoInicial = time.time()
     tiempoBusqueda, buenas, promedioOpinion = 0, 0, 0
-    fileBase = open(base, "r")
-    grafosBase = fileBase.readlines()
-    fileBase.close()
-    if not nuevos:
+    if nuevos:
+        fileBase = open(base, "r")
+        grafosBase = fileBase.readlines()
+        fileBase.close()
+    else:
         file = open(datos, "r")
         grafos = file.readlines()
         file.close()
@@ -895,7 +864,81 @@ def experimentarEstrategiaPy2(iter, maxN, maxA, base, tipoSeleccion, pasos, nomb
     print("Buenas: %d, Porcentaje: %.2f%%, Promedio Opinión: %.3f" % (buenas, (buenas / iter) * 100, promedioOpinion / iter))
     print("Tiempo Total (Min): %.2f, Tiempo Busqueda (Min): %.2f, Porcentaje Busqueda: %.2f%%" % (tiempoFinal, tiempoBusqueda, (tiempoBusqueda / tiempoFinal) * 100))
 
-#experimentarEstrategiaPy2(100, 3000, 2, 10, 0.5, 1, "degroot", 1000, "TestDG-PruebaTiempo-3000N-Py", 1, "")
-#experimentarEstrategiaPy2(100, 5000, 2, 10, 0.5, 1, "s5", 1000,
-#                         "S5-PruebaTiempo-5000N-Py", 0,
-#                         "experimentos\\PruebaTiempo\\DeGrootPython\\AristasProbabilidad\\10\\grafosDG-PruebaTiempo-5000N-Py.txt")
+#experimentarEstrategiaPy2(100, 25000, 5, "grafosDG-PruebaTiempo-20000N-Py.txt", "degroot", 1000, 
+#   "DG-PruebaTiempo-25000N-Py", 1, "")
+#experimentarEstrategiaPy2(100, 25000, 5, "", "s5", 1000,
+#    "S5-PruebaTiempo-25000N-Py", 0,
+#    "experimentos\\PruebaTiempo\\DeGrootPython\\GeneracionRecursiva\\5\\grafosDG-PruebaTiempo-25000N-Py.txt")
+    
+def calcularGrados(opiniones, aristas):
+    grados_entrada = {nodo: 0 for nodo in opiniones}
+    grados_salida = {nodo: 0 for nodo in opiniones}
+    for src, dst, _ in aristas:
+        grados_salida[src] += 1
+        grados_entrada[dst] += 1
+    entrada_promedio = sum(grados_entrada.values()) / len(opiniones)
+    salida_promedio = sum(grados_salida.values()) / len(opiniones)
+    return entrada_promedio, salida_promedio
+
+def calcularMetricas(datos, nombre):
+    grados_entrada = []
+    grados_salida = []
+    file = open(datos, "r")
+    grafos = file.readlines()
+    file.close()
+    for i in range(len(grafos)):
+        o, a = leerGrafo(grafos[i].strip())
+        ge, gs = calcularGrados(o, a)
+        grados_entrada.append(ge)
+        grados_salida.append(gs)
+    gep = sum(grados_entrada) / len(grafos)
+    gsp = sum(grados_salida) / len(grafos)
+    f = open("grados" + nombre + ".txt", "a")
+    f.write("%f %f\n" % (gep, gsp))
+    f.close()
+
+#calcularMetricas("experimentos\\PruebaTiempo\\DeGrootPython\\GeneracionRecursiva\\5\\grafosDG-PruebaTiempo-10N-Py.txt",
+#                 "Recursiva")
+
+def bfs(origen, vecinos, N):
+    dist = {n: float("inf") for n in range(N)}
+    dist[origen] = 0
+    q = deque([origen])
+    while q:
+        u = q.popleft()
+        for v in vecinos[u]:
+            if dist[v] == float("inf"):
+                dist[v] = dist[u] + 1
+                q.append(v)
+    return dist
+
+def calcularRadio(opiniones, aristas):
+    nodos = list(opiniones.keys())
+    N = len(nodos)
+    vecinos = defaultdict(list)
+    for src, dst, _ in aristas:
+        vecinos[src].append(dst)
+    excentricidades = []
+    for nodo in nodos:
+        dist = bfs(nodo, vecinos, N)
+        excentricidad = max(d for d in dist.values() if d < float("inf"))
+        excentricidades.append(excentricidad)
+    return min(excentricidades)
+
+def calcularRadios(datos, nombre):
+    radios = []
+    file = open(datos, "r")
+    grafos = file.readlines()
+    file.close()
+    grafos = grafos[80:100]
+    for i in range(len(grafos)):
+        o, a = leerGrafo(grafos[i].strip())
+        radios.append(calcularRadio(o, a))
+        print(i)
+    rp = sum(radios) / len(grafos)
+    f = open("radios" + nombre + ".txt", "a")
+    f.write("%f\n" % (rp))
+    f.close()
+
+calcularRadios("experimentos\\PruebaTiempo\\DeGrootPython\\GeneracionRecursiva\\5\\grafosDG-PruebaTiempo-25000N-Py.txt",
+                 "Recursiva80-100")
